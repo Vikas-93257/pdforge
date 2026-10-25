@@ -1,0 +1,56 @@
+[
+  {
+    "file": "fonts/NotoSans.ttf",
+    "bytes": 2049096,
+    "sha256": "bfb7bb691513f12e734dc346c03a03f784912432d7e3fa8e56efcf906fe86b3d",
+    "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/NotoSans%5Bwdth,wght%5D.ttf"
+  },
+  {
+    "file": "fonts/OFL-NotoSans.txt",
+    "bytes": 4396,
+    "sha256": "cee9892f9f0cc8fe882c9e9537ee6a89621d86ee7ceaf70b02e2b2b1c25c061a",
+    "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/OFL.txt"
+  },
+  {
+    "file": "fonts/NotoSansDevanagari.ttf",
+    "bytes": 641944,
+    "sha256": "14ec4af41f27482216d1c2229f417ff9b1425e1babb014e57d1d40d03229853e",
+    "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansdevanagari/NotoSansDevanagari%5Bwdth,wght%5D.ttf"
+  },
+  {
+    "file": "fonts/OFL-NotoSansDevanagari.txt",
+    "bytes": 4386,
+    "sha256": "a216f6f8d85c7228093e0ee5e258d9d377e6671f68acb4db1930b29583d0f331",
+    "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansdevanagari/OFL.txt"
+  },
+  {
+    "file": "engines/ocr/lang/eng.traineddata.gz",
+    "bytes": 1967599,
+    "sha256": "384e37bf0f5ddcc4a1e24802322a837e0b5692e18150e6078ff1d4379b191f98",
+    "source": "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main/eng.traineddata"
+  },
+  {
+    "file": "engines/ocr/lang/hin.traineddata.gz",
+    "bytes": 923147,
+    "sha256": "14a6c9e8503921fb4c79470608048a85f46cdfce254025c04f5a701b63da4f96",
+    "source": "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main/hin.traineddata"
+  },
+  {
+    "file": "engines/ocr/lang/LICENSE",
+    "bytes": 11358,
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "source": "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main/LICENSE"
+  },
+  {
+    "file": "licenses/upstream/qpdf-LICENSE.txt",
+    "bytes": 11358,
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "source": "https://raw.githubusercontent.com/qpdf/qpdf/v12.2.0/LICENSE.txt"
+  },
+  {
+    "file": "licenses/upstream/qpdf-NOTICE.txt",
+    "bytes": 2729,
+    "sha256": "d590610848429da713cef608a0183dbf3c7726d738c3be6fa5b36c507444b645",
+    "source": "https://raw.githubusercontent.com/qpdf/qpdf/v12.2.0/NOTICE.md"
+  }
+]

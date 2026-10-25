@@ -1,0 +1,72 @@
+import {
+  Combine,
+  Scissors,
+  Layers,
+  Copy,
+  Trash2,
+  RotateCw,
+  Minimize2,
+  Wrench,
+  Image as ImageIcon,
+  FileImage,
+  FileText,
+  FileType,
+  Type,
+  Hash,
+  Stamp,
+  PenLine,
+  Lock,
+  Unlock,
+  Crop,
+  Expand,
+  Shield,
+  ScanText,
+  Info,
+  ShieldCheck,
+  Columns2,
+  Images,
+  Table2,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+export const TOOL_ICONS: Record<string, LucideIcon> = {
+  combine: Combine,
+  scissors: Scissors,
+  layers: Layers,
+  copy: Copy,
+  trash: Trash2,
+  rotate: RotateCw,
+  minimize: Minimize2,
+  wrench: Wrench,
+  image: ImageIcon,
+  "file-image": FileImage,
+  "file-text": FileText,
+  "file-type": FileType,
+  text: Type,
+  type: Type,
+  hash: Hash,
+  stamp: Stamp,
+  pen: PenLine,
+  lock: Lock,
+  unlock: Unlock,
+  crop: Crop,
+  expand: Expand,
+  shield: Shield,
+  scan: ScanText,
+  info: Info,
+  "shield-check": ShieldCheck,
+  columns: Columns2,
+  images: Images,
+  table: Table2,
+};
+export function ToolIcon({
+  name,
+  size = 24,
+  ...props
+}: {
+  name: string;
+  size?: number;
+  className?: string;
+}) {
+  const Icon = TOOL_ICONS[name] ?? FileText;
+  return <Icon size={size} strokeWidth={1.7} aria-hidden="true" {...props} />;
+}

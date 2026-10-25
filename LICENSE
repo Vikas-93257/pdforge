@@ -1,0 +1,50 @@
+PDFORGE Restricted-Use Application License — version 1.1
+
+Copyright (c) 2026 PDFORGE contributors. All rights reserved, except for the
+permissions expressly granted below and rights provided by applicable law.
+
+1. FREE USE OF THE OFFICIAL SERVICE
+You may access and use an authorized, officially hosted PDFORGE service free
+of charge for personal or commercial document processing, subject to its
+published terms, resource limits and the host's policies. You may execute the
+application in your browser and make the incidental downloads and cache copies
+technically necessary for that use. This permission does not grant access to
+the private application source repository or permission to operate a copy of
+the service for others.
+
+2. APPLICATION CODE AND ORIGINAL ASSETS
+Except with the copyright owner's separate written permission, you may not
+redistribute, publish, sublicense, sell, mirror, rehost or distribute modified
+versions of the original PDFORGE application code or original application
+assets. Do not remove applicable copyright/license notices or misrepresent
+ownership. These restrictions do not override rights that cannot lawfully be
+restricted under applicable law.
+
+3. THIRD-PARTY COMPONENTS ARE SEPARATE
+This license applies only to the original PDFORGE application material. It
+does not replace, revoke or restrict independently granted rights in bundled
+third-party libraries, processing engines, fonts, language models, icons or
+other upstream material. Their respective licenses and required notices
+continue to apply, including any permissions to inspect, modify or redistribute
+those components. See the distributed application and third-party notices.
+
+4. YOUR DOCUMENTS
+PDFORGE does not claim ownership of your input documents or generated document
+content. You remain responsible for your rights in that content and any
+third-party rights applying to it. This application license does not impose a
+PDFORGE redistribution restriction on your own processed documents.
+
+5. NO WARRANTY; LIABILITY
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE APPLICATION IS PROVIDED
+"AS IS", WITHOUT WARRANTIES OF ACCURACY, AVAILABILITY, MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT OR DEFECT-FREE OPERATION. KEEP
+ORIGINALS AND REVIEW OUTPUT. THE COPYRIGHT HOLDERS AND CONTRIBUTORS ARE NOT
+LIABLE FOR CLAIMS OR DAMAGES ARISING FROM USE EXCEPT WHERE LIABILITY CANNOT
+LAWFULLY BE EXCLUDED.
+
+6. SCOPE AND EARLIER COPIES
+This notice governs this application edition and is not a promise of technical
+copy prevention, confidentiality certification or exclusive ownership of
+upstream open-source work. It does not retroactively revoke rights validly
+granted for earlier, separately licensed copies. Legal interpretation and
+enforcement depend on applicable law; this notice is not legal advice.

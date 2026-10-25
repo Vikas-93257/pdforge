@@ -1,0 +1,17 @@
+{
+  "product": "PDFORGE",
+  "version": "1.1.0",
+  "edition": "Private source; public website; restricted application reuse",
+  "repository": "Vikas-93257/pdforge",
+  "repositoryVisibility": "PRIVATE",
+  "websiteTarget": "https://vikas-93257.github.io/pdforge/",
+  "websiteVisibility": "public",
+  "applicationLicense": "PDFORGE Restricted-Use Application License",
+  "thirdPartyRightsPreserved": true,
+  "verificationStatus": "Local formatting/lint/typecheck/build/static checks, 88 unit cases and 3 browser policy cases passed; full remote CI pending.",
+  "deploymentStatus": "Pages configured; production build/deployment not yet completed.",
+  "localUnitTestsPassed": 88,
+  "localBrowserPolicyCasesPassed": 3,
+  "exportPayloadHashesVerified": 478,
+  "engineHashesVerified": 214
+}
