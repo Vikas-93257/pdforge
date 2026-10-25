@@ -1,17 +1,328 @@
 {
   "product": "PDFORGE",
   "version": "1.1.0",
-  "edition": "Private source; public website; restricted application reuse",
-  "repository": "Vikas-93257/pdforge",
+  "releaseDate": "2026-10-25",
+  "website": "https://vikas-93257.github.io/pdforge/",
+  "websitePublic": true,
+  "httpsEnforced": true,
+  "repository": "https://github.com/Vikas-93257/pdforge",
   "repositoryVisibility": "PRIVATE",
-  "websiteTarget": "https://vikas-93257.github.io/pdforge/",
-  "websiteVisibility": "public",
-  "applicationLicense": "PDFORGE Restricted-Use Application License",
-  "thirdPartyRightsPreserved": true,
-  "verificationStatus": "Local formatting/lint/typecheck/build/static checks, 88 unit cases and 3 browser policy cases passed; full remote CI pending.",
-  "deploymentStatus": "Pages configured; production build/deployment not yet completed.",
-  "localUnitTestsPassed": 88,
-  "localBrowserPolicyCasesPassed": 3,
-  "exportPayloadHashesVerified": 478,
-  "engineHashesVerified": 214
+  "additionalCollaborators": 0,
+  "applicationLicense": "PDFORGE Restricted-Use Application License; official-service use free",
+  "thirdPartyLicensesUnchanged": true,
+  "productionApplicationSourceMaps": false,
+  "anonymousRepositoryAndRawSourceAccess": "HTTP 404",
+  "deployedCodeCommit": "c3b8b9e4c07b3e7df93034360f0e4b9c84917b5c",
+  "workflowUrl": "https://github.com/Vikas-93257/pdforge/actions/runs/40215942813",
+  "workflowConclusion": "success",
+  "ciUnitTests": {
+    "workflowRun": 40215942813,
+    "buildJob": 121236969327,
+    "tests": 88,
+    "pass": 88,
+    "fail": 0,
+    "skipped": 0,
+    "source": "Actual private GitHub Actions build-job log"
+  },
+  "ciBrowserTests": {
+    "startTime": "2026-10-25T17:22:20.133Z",
+    "duration": 371619.484,
+    "expected": 228,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "ciNativeOutputChecks": 30,
+  "publicHostBrowserTests": {
+    "startTime": "2026-10-25T17:33:22.039Z",
+    "duration": 90534.144,
+    "expected": 76,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "publicHostNativeOutputChecks": 30,
+  "staticChecks": {
+    "passed": true,
+    "exportFilesVerified": 508,
+    "contentPages": 41,
+    "uniqueTitles": 41,
+    "uniqueDescriptions": 41,
+    "sitemapEntries": 41,
+    "localReferencesChecked": 1660,
+    "structuredDataBlocks": 34,
+    "siteUrl": "https://vikas-93257.github.io/pdforge",
+    "basePath": "/pdforge",
+    "engineHashesVerified": 214,
+    "errors": []
+  },
+  "dependencyAdvisories": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "publicLighthouse": {
+    "environment": "Local production static export; Lighthouse mobile defaults. Not a ranking or field-performance guarantee.",
+    "results": [
+      {
+        "page": "home",
+        "url": "https://vikas-93257.github.io/pdforge/",
+        "fetchedAt": "2026-10-25T17:36:20.269Z",
+        "lighthouseVersion": "13.5.0",
+        "scores": {
+          "performance": 98,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "failedAudits": [
+          {
+            "id": "largest-contentful-paint",
+            "title": "Largest Contentful Paint",
+            "score": 0.99,
+            "displayValue": "1.7 s"
+          },
+          {
+            "id": "total-blocking-time",
+            "title": "Total Blocking Time",
+            "score": 0.95,
+            "displayValue": "150 ms"
+          },
+          {
+            "id": "max-potential-fid",
+            "title": "Max Potential First Input Delay",
+            "score": 0.67,
+            "displayValue": "200 ms"
+          },
+          {
+            "id": "unused-javascript",
+            "title": "Reduce unused JavaScript",
+            "score": 0,
+            "displayValue": "Est savings of 55 KiB"
+          },
+          {
+            "id": "cache-insight",
+            "title": "Use efficient cache lifetimes",
+            "score": 0,
+            "displayValue": "Est savings of 145 KiB"
+          },
+          {
+            "id": "forced-reflow-insight",
+            "title": "Forced reflow",
+            "score": 0
+          },
+          {
+            "id": "legacy-javascript-insight",
+            "title": "Legacy JavaScript",
+            "score": 0.5,
+            "displayValue": "Est savings of 14 KiB"
+          },
+          {
+            "id": "network-dependency-tree-insight",
+            "title": "Network dependency tree",
+            "score": 0
+          },
+          {
+            "id": "render-blocking-insight",
+            "title": "Render-blocking requests",
+            "score": 0.5,
+            "displayValue": "Est savings of 20 ms"
+          }
+        ]
+      },
+      {
+        "page": "merge",
+        "url": "https://vikas-93257.github.io/pdforge/tools/merge/",
+        "fetchedAt": "2026-10-25T17:36:28.278Z",
+        "lighthouseVersion": "13.5.0",
+        "scores": {
+          "performance": 99,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "failedAudits": [
+          {
+            "id": "largest-contentful-paint",
+            "title": "Largest Contentful Paint",
+            "score": 0.99,
+            "displayValue": "1.7 s"
+          },
+          {
+            "id": "total-blocking-time",
+            "title": "Total Blocking Time",
+            "score": 0.96,
+            "displayValue": "130 ms"
+          },
+          {
+            "id": "max-potential-fid",
+            "title": "Max Potential First Input Delay",
+            "score": 0.74,
+            "displayValue": "180 ms"
+          },
+          {
+            "id": "unused-javascript",
+            "title": "Reduce unused JavaScript",
+            "score": 0,
+            "displayValue": "Est savings of 55 KiB"
+          },
+          {
+            "id": "cache-insight",
+            "title": "Use efficient cache lifetimes",
+            "score": 0,
+            "displayValue": "Est savings of 150 KiB"
+          },
+          {
+            "id": "legacy-javascript-insight",
+            "title": "Legacy JavaScript",
+            "score": 0.5,
+            "displayValue": "Est savings of 14 KiB"
+          },
+          {
+            "id": "network-dependency-tree-insight",
+            "title": "Network dependency tree",
+            "score": 0
+          },
+          {
+            "id": "render-blocking-insight",
+            "title": "Render-blocking requests",
+            "score": 0,
+            "displayValue": "Est savings of 70 ms"
+          }
+        ]
+      },
+      {
+        "page": "ocr",
+        "url": "https://vikas-93257.github.io/pdforge/tools/ocr/",
+        "fetchedAt": "2026-10-25T17:36:35.394Z",
+        "lighthouseVersion": "13.5.0",
+        "scores": {
+          "performance": 99,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "failedAudits": [
+          {
+            "id": "largest-contentful-paint",
+            "title": "Largest Contentful Paint",
+            "score": 0.99,
+            "displayValue": "1.7 s"
+          },
+          {
+            "id": "total-blocking-time",
+            "title": "Total Blocking Time",
+            "score": 0.97,
+            "displayValue": "110 ms"
+          },
+          {
+            "id": "max-potential-fid",
+            "title": "Max Potential First Input Delay",
+            "score": 0.79,
+            "displayValue": "160 ms"
+          },
+          {
+            "id": "unused-javascript",
+            "title": "Reduce unused JavaScript",
+            "score": 0,
+            "displayValue": "Est savings of 55 KiB"
+          },
+          {
+            "id": "cache-insight",
+            "title": "Use efficient cache lifetimes",
+            "score": 0,
+            "displayValue": "Est savings of 150 KiB"
+          },
+          {
+            "id": "legacy-javascript-insight",
+            "title": "Legacy JavaScript",
+            "score": 0.5,
+            "displayValue": "Est savings of 14 KiB"
+          },
+          {
+            "id": "network-dependency-tree-insight",
+            "title": "Network dependency tree",
+            "score": 0
+          },
+          {
+            "id": "render-blocking-insight",
+            "title": "Render-blocking requests",
+            "score": 0,
+            "displayValue": "Est savings of 60 ms"
+          }
+        ]
+      },
+      {
+        "page": "privacy",
+        "url": "https://vikas-93257.github.io/pdforge/privacy/",
+        "fetchedAt": "2026-10-25T17:36:42.549Z",
+        "lighthouseVersion": "13.5.0",
+        "scores": {
+          "performance": 99,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 100
+        },
+        "failedAudits": [
+          {
+            "id": "largest-contentful-paint",
+            "title": "Largest Contentful Paint",
+            "score": 0.99,
+            "displayValue": "1.7 s"
+          },
+          {
+            "id": "total-blocking-time",
+            "title": "Total Blocking Time",
+            "score": 0.97,
+            "displayValue": "110 ms"
+          },
+          {
+            "id": "max-potential-fid",
+            "title": "Max Potential First Input Delay",
+            "score": 0.79,
+            "displayValue": "160 ms"
+          },
+          {
+            "id": "unused-javascript",
+            "title": "Reduce unused JavaScript",
+            "score": 0,
+            "displayValue": "Est savings of 55 KiB"
+          },
+          {
+            "id": "cache-insight",
+            "title": "Use efficient cache lifetimes",
+            "score": 0,
+            "displayValue": "Est savings of 136 KiB"
+          },
+          {
+            "id": "legacy-javascript-insight",
+            "title": "Legacy JavaScript",
+            "score": 0,
+            "displayValue": "Est savings of 14 KiB"
+          },
+          {
+            "id": "network-dependency-tree-insight",
+            "title": "Network dependency tree",
+            "score": 0
+          },
+          {
+            "id": "render-blocking-insight",
+            "title": "Render-blocking requests",
+            "score": 0,
+            "displayValue": "Est savings of 110 ms"
+          }
+        ]
+      }
+    ]
+  },
+  "limits": [
+    "Public browser code/assets remain inspectable/copyable; private source and licensing are not technical copy prevention.",
+    "Earlier valid license grants are not retroactively revoked.",
+    "Technical SEO scores do not guarantee indexing, search rank or AI recommendations.",
+    "Linux WebKit coverage is not real-device Safari/iOS certification.",
+    "No security/legal/standards certification or zero-defect guarantee."
+  ]
 }
