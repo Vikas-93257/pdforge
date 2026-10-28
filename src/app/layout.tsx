@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowUpRight, ShieldCheck, Code2 } from "lucide-react";
 import { Brand } from "@/components/Brand";
-import { SITE_URL, absolute, assetUrl } from "@/lib/site";
+import { SITE_URL, absolute, assetUrl, safeJson } from "@/lib/site";
 import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -12,7 +12,25 @@ export const metadata: Metadata = {
     "30 free PDF tools that run on your device. Merge, split, compress, convert, sign and protect PDFs in your browser. No uploads, accounts or subscriptions.",
   applicationName: "PDFORGE",
   category: "productivity",
-  robots: { index: true, follow: true },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  verification: {
+    ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+      ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+      : {}),
+    ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+      ? { other: { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION } }
+      : {}),
+  },
   openGraph: {
     type: "website",
     siteName: "PDFORGE",
@@ -51,6 +69,21 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: safeJson({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "@id": absolute("#publisher"),
+              name: "PDFORGE project",
+              url: absolute(),
+              logo: absolute("apple-touch-icon.png"),
+              description:
+                "Project publishing free browser-local PDF tools; original application source is privately maintained.",
+            }),
+          }}
+        />
         <a className="skip-link" href="#main">
           Skip to content
         </a>
@@ -144,6 +177,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <Link href="/about/#software-license" prefetch={false}>
                 About this software
               </Link>
+              <Link href="/testing/" prefetch={false}>
+                Testing & examples
+              </Link>
+              <a href={assetUrl("/sitemap.xml")}>Sitemap</a>
               <a href={assetUrl("/llms.txt")}>Machine-readable overview</a>
             </div>
           </div>

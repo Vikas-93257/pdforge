@@ -1,6 +1,6 @@
 {
   "name": "pdforge",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "Free, private, browser-based PDF tools. Static hosting. No document uploads.",
   "license": "SEE LICENSE IN LICENSE",
@@ -25,7 +25,9 @@
     "test:cross-browser": "npm run fixtures && playwright test",
     "format": "prettier --write src scripts tests *.ts *.mjs package.json tsconfig.json .github docs README.md SECURITY.md CHANGELOG.md",
     "format:check": "prettier --check src scripts tests *.ts *.mjs package.json tsconfig.json .github docs README.md SECURITY.md CHANGELOG.md",
-    "test:base-path": "npm run fixtures && node scripts/check-base-path.mjs"
+    "test:base-path": "npm run fixtures && node scripts/check-base-path.mjs",
+    "examples": "tsx scripts/public-examples.mts",
+    "indexnow": "tsx scripts/indexnow.mts"
   },
   "dependencies": {
     "@neslinesli93/qpdf-wasm": "0.3.0",

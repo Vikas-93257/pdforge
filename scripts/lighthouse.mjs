@@ -8,6 +8,8 @@ const base = (process.env.TEST_BASE_URL || "http://localhost:3000").replace(/\/$
     ["merge", "/tools/merge/"],
     ["ocr", "/tools/ocr/"],
     ["privacy", "/privacy/"],
+    ["pdf-word", "/tools/pdf-to-word/"],
+    ["testing", "/testing/"],
   ];
 fs.mkdirSync("reports/lighthouse", { recursive: true });
 const summaries = [];

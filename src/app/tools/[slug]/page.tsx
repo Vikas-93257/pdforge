@@ -5,6 +5,8 @@ import { ArrowLeft, ArrowRight, ShieldCheck, Info, Plus } from "lucide-react";
 import { TOOLS, CATEGORIES, getTool } from "@/lib/tools";
 import { absolute, safeJson } from "@/lib/site";
 import { ToolIcon } from "@/components/ToolIcons";
+import ToolDiscovery from "@/components/ToolDiscovery";
+import { discoveryFor } from "@/lib/discovery";
 import ToolRunner from "@/components/ToolRunner";
 export const dynamicParams = false;
 export function generateStaticParams() {
@@ -18,15 +20,21 @@ export async function generateMetadata({
   const { slug } = await params,
     t = getTool(slug);
   if (!t) return {};
+  const detail = discoveryFor(t);
+  const title = detail?.title || `${t.name} — Free & private`;
+  const description =
+    detail?.description ||
+    `${t.description} Free in your browser. No document uploads or sign-up. See the tool’s steps, output options and honest limitations.`;
   return {
-    title: `${t.name} — Free & private`,
-    description: `${t.description} Free in your browser. No document uploads or sign-up. See the tool’s steps, output options and honest limitations.`,
+    title,
+    description,
     alternates: { canonical: absolute(`tools/${slug}/`) },
     openGraph: {
-      title: `${t.name} — PDFORGE`,
-      description: t.description,
+      title: `${title} | PDFORGE`,
+      description,
       url: absolute(`tools/${slug}/`),
     },
+    twitter: { card: "summary_large_image", title: `${title} | PDFORGE`, description },
   };
 }
 export default async function ToolPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -43,7 +51,10 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
         "@id": absolute(`tools/${slug}/#app`),
         name: tool.name,
         url: absolute(`tools/${slug}/`),
-        description: tool.description,
+        description: discoveryFor(tool)?.description || tool.description,
+        publisher: { "@id": absolute("#publisher") },
+        inLanguage: "en",
+        license: absolute("licenses/"),
         applicationCategory: "UtilitiesApplication",
         operatingSystem: "Modern browser with JavaScript and WebAssembly",
         browserRequirements: "Requires JavaScript, WebAssembly, Workers and Canvas",
@@ -139,10 +150,11 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
             </div>
           </aside>
         </div>
+        <ToolDiscovery tool={tool} />
         <section className="tool-faq">
           <div>
             <span className="eyebrow">USEFUL TO KNOW</span>
-            <h2>About {tool.name.toLowerCase()}</h2>
+            <h2>About {tool.name}</h2>
           </div>
           <div className="faq-list">
             {tool.faqs.map((f) => (

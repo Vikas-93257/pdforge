@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, ArrowRight } from "lucide-react";
 import type { Article } from "@/lib/content";
+import { getTool } from "@/lib/tools";
 import { assetUrl } from "@/lib/site";
 export default function ArticlePage({
   article,
@@ -21,7 +22,15 @@ export default function ArticlePage({
           <span className="heading-dot">.</span>
         </h1>
         <p>{article.intro}</p>
-        <div className="article-meta">PDFORGE documentation · Updated October 25, 2026</div>
+        <div className="article-meta">
+          PDFORGE documentation · Updated{" "}
+          {new Date((article.updated || "2026-10-25") + "T00:00:00Z").toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            timeZone: "UTC",
+          })}
+        </div>
       </header>
       <div className="article-layout">
         <nav className="article-toc" aria-label="On this page">
@@ -48,6 +57,42 @@ export default function ArticlePage({
               )}
             </section>
           ))}
+          {article.slug === "testing" && (
+            <section>
+              <h2>Public evidence downloads</h2>
+              <p>
+                <a href={assetUrl("/examples/pdf-to-word/sample-input.pdf")}>Synthetic PDF input</a>{" "}
+                ·{" "}
+                <a href={assetUrl("/examples/pdf-to-word/sample-output.docx")}>
+                  Actual DOCX output
+                </a>
+              </p>
+              <p>
+                <a href={assetUrl("/testing-baseline.json")}>
+                  Dated, public-safe 1.1 validation summary
+                </a>{" "}
+                · <a href={assetUrl("/engines/manifest.json")}>Engine SHA-256 hashes</a>
+              </p>
+            </section>
+          )}
+          {article.relatedTools?.length ? (
+            <section>
+              <h2>Open the tools in this workflow</h2>
+              <ul>
+                {article.relatedTools.map((slug) => {
+                  const tool = getTool(slug);
+                  return tool ? (
+                    <li key={slug}>
+                      <Link href={`/tools/${slug}/`} prefetch={false}>
+                        {tool.name}
+                      </Link>{" "}
+                      — {tool.description}
+                    </li>
+                  ) : null;
+                })}
+              </ul>
+            </section>
+          ) : null}
           {article.slug === "licenses" && (
             <section>
               <h2>Download notices</h2>

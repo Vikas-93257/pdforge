@@ -3152,3 +3152,99 @@ summary::-webkit-details-marker {
     font-size: 9px;
   }
 }
+
+.tool-discovery {
+  margin: 52px 0;
+  padding: 32px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.tool-discovery h2 {
+  font-size: clamp(23px, 3vw, 32px);
+  line-height: 1.2;
+  letter-spacing: -0.7px;
+  max-width: 740px;
+}
+.tool-discovery h3 {
+  font-size: 17px;
+  line-height: 1.4;
+  margin: 22px 0 8px;
+}
+.tool-discovery p,
+.tool-discovery li {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.75;
+  max-width: 940px;
+}
+.tool-discovery a {
+  color: var(--green-dark);
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+.tool-specs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 22px 0;
+}
+.tool-specs > div {
+  padding: 18px 20px;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.55);
+  border-bottom: 1px solid var(--line);
+}
+.tool-specs dt {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 5px;
+}
+.tool-specs dd {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.discovery-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+.sample-panel {
+  margin: 26px 0;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--soft-green);
+}
+.sample-panel h3 {
+  margin-top: 0;
+}
+.sample-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin: 15px 0;
+}
+.sample-links a {
+  font-size: 13px;
+}
+.workflow-links ul {
+  padding-left: 20px;
+}
+@media (max-width: 650px) {
+  .tool-specs,
+  .discovery-columns {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .tool-discovery {
+    margin-top: 32px;
+  }
+  .sample-panel {
+    padding: 16px;
+  }
+}

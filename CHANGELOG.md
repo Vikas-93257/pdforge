@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.1 — 2026-10-28 (SEO/discovery-only release)
+
+- Corrected the private/restricted application hero badge; upstream open-source attribution retained.
+- Added service-specific input/output/limitations/workflow content for all thirty real tools.
+- Added three original task guides, public synthetic PDF/DOCX evidence and a dated test-method page.
+- Improved priority tool metadata, project identity, visible matching structured data and real content dates.
+- Prepared path-scoped, proof-validated IndexNow notifications; no ranking/indexing guarantee.
+- No commercial-beta features, hosting migration, payment or repository-visibility changes.
+
 ## 1.1.0 — 2026-10-25
 
 - User-selected private-source, publicly usable deployment edition.

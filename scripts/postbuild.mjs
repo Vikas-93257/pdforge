@@ -37,6 +37,8 @@ fs.writeFileSync(
     ],
   }),
 );
+const proofFile = JSON.parse(fs.readFileSync("config/search-discovery.json", "utf8")).indexNow
+  .keyFile;
 const all = [];
 function walk(dir) {
   for (const f of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -47,7 +49,9 @@ function walk(dir) {
 }
 walk("out");
 const inventory = all
-  .filter((p) => p !== path.join("out", "static-manifest.json"))
+  .filter(
+    (p) => p !== path.join("out", "static-manifest.json") && p !== path.join("out", proofFile),
+  )
   .map((p) => {
     const b = fs.readFileSync(p);
     return {

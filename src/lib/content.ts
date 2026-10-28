@@ -4,6 +4,8 @@ export type Article = {
   description: string;
   eyebrow: string;
   intro: string;
+  updated?: string;
+  relatedTools?: string[];
   sections: { id?: string; heading: string; paragraphs: string[]; bullets?: string[] }[];
 };
 export const PAGES: Article[] = [
@@ -13,6 +15,7 @@ export const PAGES: Article[] = [
     description:
       "PDFORGE is a free-to-use PDF toolkit with private application source, local browser processing, static hosting and clear feature limitations.",
     eyebrow: "ABOUT PDFORGE",
+    updated: "2026-10-28",
     intro:
       "Useful tools. No account to manage. No document-upload queue. Just a little less friction between you and your next task.",
     sections: [
@@ -36,6 +39,13 @@ export const PAGES: Article[] = [
         paragraphs: [
           "The PDFORGE application is free to use on the official service. Its application source is maintained in a private repository and is covered by a restricted-use license. Bundled open-source engines, fonts and other third-party components retain their own licenses and permissions.",
           "A private repository is not technical copy protection: browser-delivered code and assets can still be inspected. The application license restricts redistribution of original application material, not rights granted by third-party licenses. This release does not claim security certification, guaranteed compliance, perfect conversion or zero future defects.",
+        ],
+      },
+      {
+        heading: "Which project this page describes",
+        paragraphs: [
+          "This PDFORGE is the browser-tool project published under the Vikas-93257 GitHub account at this site's canonical URL. It is not an affiliation or endorsement from iLovePDF, Microsoft, Adobe or another product with a similar name.",
+          "The original application is privately maintained and restricted-use, while independent open-source engines keep their own terms. No registered-company identity, public source availability, customer count or security certification is implied by the project name.",
         ],
       },
       {
@@ -248,6 +258,53 @@ export const PAGES: Article[] = [
       },
     ],
   },
+  {
+    slug: "testing",
+    title: "How PDFORGE checks its tools—and what tests cannot prove",
+    description:
+      "Inspect PDFORGE's test method, public synthetic PDF-to-Word sample, local-processing checks and known limitations. No fake ratings or security certification.",
+    eyebrow: "TESTING & PUBLIC EXAMPLES",
+    updated: "2026-10-28",
+    intro:
+      "Useful evidence should be inspectable without pretending that a passing suite makes every file safe or every conversion perfect.",
+    relatedTools: ["pdf-to-word", "ocr", "compress", "redact"],
+    sections: [
+      {
+        heading: "Real outputs, not renamed files",
+        paragraphs: [
+          "The release tests run the actual tools and inspect downloaded PDFs, images, ZIP members, DOCX XML and text. Checks include PDF page order/count/geometry, selectable words, encryption/decryption with known test passwords, image orientation and comparison results. A success message or filename alone is not enough.",
+          "Native qpdf/Poppler and OCR provide additional output checks, including visible Word-conversion content and inspected source-object removal for destructive redaction/sanitization. These are synthetic fixtures, not customer documents.",
+        ],
+      },
+      {
+        heading: "A dated baseline, not a universal rating",
+        paragraphs: [
+          "The published 1.1 release's recorded verification included 88 passing unit cases, 228 browser cases across Chromium/Firefox/Linux WebKit and 30 native/output checks. After deployment, 76 Chromium cases and 30 native/output checks were rerun against the public website. These numbers describe that dated release and test corpus, not every possible document.",
+          "The site does not fabricate user ratings, customer totals, endorsements, compliance badges or a 10/10 security score. Linux WebKit is engine coverage, not real-device Safari/iOS certification. Technical SEO lab scores are not Google rank, indexing or AI-recommendation guarantees.",
+        ],
+      },
+      {
+        heading: "Try the public PDF-to-Word sample",
+        paragraphs: [
+          "The PDF-to-Word page links a synthetic source PDF and the actual DOCX produced by the local converter. Open both and inspect the editable words and page boundaries. The example uses straightforward selectable text; it is not evidence that charts, original images, tables, multiple columns or every font will retain their layout.",
+          "Sample document data is separately offered under CC0. Original application code remains privately maintained under its restricted-use license, and independent upstream libraries/fonts/models retain their own licenses.",
+        ],
+      },
+      {
+        heading: "What local processing does and does not protect",
+        paragraphs: [
+          "Selected documents are processed in browser memory, not sent to a PDFORGE processing API. Positive tool tests watch application requests for unexpected origins/document-upload methods, and workspace tests check reference/download cleanup. The static host still receives ordinary page/asset requests, including IP/browser headers.",
+          "A compromised device, extension, browser, dependency or modified deployment can break this boundary. The app is not an antivirus, audited malware sandbox, security certification or promise of forensic RAM erasure.",
+        ],
+      },
+      {
+        heading: "Review outputs where failure matters",
+        paragraphs: [
+          "Keep originals. Verify OCR names/amounts/dates. Compare converted pages with the source. Cover every sensitive occurrence when redacting, then independently inspect the output. Crop is not redaction; a visual signature is not a certificate-backed digital signature; simple CSV is not verified accounting data.",
+        ],
+      },
+    ],
+  },
 ];
 export const GUIDES: Article[] = [
   {
@@ -351,3 +408,127 @@ export const GUIDES: Article[] = [
     ],
   },
 ];
+
+GUIDES.push(
+  {
+    slug: "pdf-to-word-without-upload",
+    title: "PDF to Word without uploading: what stays editable?",
+    description:
+      "Learn when browser-local PDF-to-Word conversion works, what the editable DOCX preserves, why layouts differ and how to check a public before/after sample.",
+    eyebrow: "PRACTICAL PDF GUIDE",
+    updated: "2026-10-28",
+    relatedTools: ["pdf-to-word", "pdf-to-text", "ocr", "unlock"],
+    intro:
+      "A PDF can look like a document without storing the paragraphs, tables or reading order that a Word editor expects. Start by identifying what is actually in the file.",
+    sections: [
+      {
+        heading: "Check whether the PDF contains selectable text",
+        paragraphs: [
+          "Open the PDF in a trusted reader and try selecting an ordinary sentence. If you can select and copy sensible words, a text-focused DOCX export can be useful. If you select only a page image—or copied text is blank—recognition may be needed first.",
+          "For an encrypted document, use a password you already know and have permission to use. The Unlock tool does not recover a missing credential. PDF restrictions and document ownership still matter.",
+        ],
+      },
+      {
+        heading: "Convert into an editable DOCX",
+        paragraphs: [
+          "Open PDF to Word, choose the PDF, run the local converter and download the .docx result. There is no sign-up or document-processing upload. The current exporter writes genuine Word OOXML with editable extracted text and page breaks.",
+          "It does not reconstruct arbitrary tables, original photographs/charts, fonts or complex page layout. Do not advertise or rely on a text-focused export as a perfect visual reproduction. If plain text is enough, PDF to text avoids an unnecessary Word container.",
+        ],
+      },
+      {
+        heading: "Inspect a before/after result, not a promise",
+        paragraphs: [
+          "Use the public synthetic pair on the PDF-to-Word page to inspect a simple case yourself. In your own output, check the beginning/end of each page, reading order, numbers, punctuation and non-Latin words. Compare against the untouched original before relying on it.",
+          "If a document has multiple columns, unusual character encodings or text positioned letter by letter, extracted reading order can need editing. A valid DOCX file is not the same as preserved original layout.",
+        ],
+      },
+      {
+        heading: "What stays on your device",
+        paragraphs: [
+          "The application reads the file into browser memory and makes a download available. It does not send the document, original filename, password or extracted words to a conversion service. The host still sees the public pages/scripts/models/fonts your browser requests.",
+          "Clear the workspace or close/navigate away when finished. That releases application references, not a guarantee of forensic erasure or deletion of files already downloaded to your device.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "scanned-pdf-to-word",
+    title: "Scanned PDF to Word: OCR, review, then editable DOCX",
+    description:
+      "Use a clear local English/Hindi OCR workflow before PDF-to-Word export. Review recognition errors and understand searchable text versus reconstructed layout.",
+    eyebrow: "PRACTICAL PDF GUIDE",
+    updated: "2026-10-28",
+    relatedTools: ["ocr", "pdf-to-word", "pdf-to-text"],
+    intro:
+      "A scanned page is often just an image. Converting its container to DOCX cannot recover words that have not first been recognized.",
+    sections: [
+      {
+        heading: "Recognize the scan with the correct language",
+        paragraphs: [
+          "Open OCR PDF & images and choose the scan. Select English, Hindi or English + Hindi to match the content, then run local recognition. Download both the text and searchable PDF result. Public language models load from the same site; the document is processed on your device.",
+          "Use a clear, upright scan where possible. Names, amounts, dates, handwriting and poor print can be recognized incorrectly. Confidence is a model output, not proof that the words are right.",
+        ],
+      },
+      {
+        heading: "Review before converting again",
+        paragraphs: [
+          "Read the recognized text against the visible scan and test selection/search in the OCR PDF. Do not treat a searchable layer as an independently verified transcript or a fully tagged accessible PDF.",
+          "For critical content, correct errors in an appropriate editor and review the full result. Never assume that a second conversion repairs OCR mistakes.",
+        ],
+      },
+      {
+        heading: "Export the searchable PDF to Word",
+        paragraphs: [
+          "Open PDF to Word and choose the reviewed searchable PDF that OCR produced. Run the local exporter and download the editable text-focused DOCX. The two tools are separate steps; navigating between them does not keep a selected customer document in a shared server history.",
+          "The result still does not reconstruct the original table/photo/layout structure. OCR creates recognized words, not original Word paragraphs or spreadsheets. For plain recognized words, the OCR text download may already be the simpler output.",
+        ],
+      },
+      {
+        heading: "Stay within actual device limits",
+        paragraphs: [
+          "OCR is capped at 40 pages per run and also has pixel/output/time budgets. File limits are 100 MB each and 300 MB per workspace, but a difficult document can reach device memory limits sooner. Split a large scan before recognition rather than expecting an unlimited cloud worker.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "pdf-to-jpg-or-png",
+    title: "PDF to JPG or PNG: choose format and scale for the job",
+    description:
+      "Choose JPEG or PNG when rendering PDF pages, understand scale/pixel trade-offs and distinguish a page screenshot from extracting an original embedded image.",
+    eyebrow: "PRACTICAL PDF GUIDE",
+    updated: "2026-10-28",
+    relatedTools: ["pdf-to-jpg", "pdf-to-png", "extract-images", "jpg-to-pdf"],
+    intro:
+      "A rendered PDF page and an embedded photograph are different outputs. Choose the operation before choosing a file extension.",
+    sections: [
+      {
+        heading: "Use JPG for a smaller lossy page image",
+        paragraphs: [
+          "PDF to JPG renders selected pages as JPEG. This can be convenient for slides/previews or image-heavy content when some image-compression loss is acceptable. Increasing quality or scale can increase output bytes rather than making every file smaller.",
+        ],
+      },
+      {
+        heading: "Use PNG when lossless encoding matters",
+        paragraphs: [
+          "PDF to PNG renders page images with lossless encoding. It can be useful for line art and text-heavy screenshots, though output size and memory still depend on page dimensions and rendering scale.",
+          "Neither format preserves PDF text selection, form fields or the editable structure of the original. An image output is not a Word conversion or an accessibility-tagged document.",
+        ],
+      },
+      {
+        heading: "Choose scale without exhausting memory",
+        paragraphs: [
+          "Select only needed pages and a scale suited to the final display/print use. The app enforces rendered-page/canvas/pixel/output budgets. File bytes alone do not measure how much memory a page needs when decoded.",
+          "Download the output and inspect fine text/lines at the intended size. For multiple pages, verify the images' sequence and bundle contents rather than assuming a ZIP filename proves success.",
+        ],
+      },
+      {
+        heading: "Extract images when you need the raster object itself",
+        paragraphs: [
+          "Extract PDF images attempts to decode supported embedded raster objects at their native dimensions. It is different from rendering a whole page, and it will not turn arbitrary vector drawings or text into the original photograph.",
+          "Document/image copyright still applies. A technical ability to extract or render an image is not permission to redistribute someone else's material.",
+        ],
+      },
+    ],
+  },
+);

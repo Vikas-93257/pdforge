@@ -48,6 +48,8 @@ export default function Home() {
             url: absolute(),
             description: "Free browser-based PDF tools with no document uploads.",
             inLanguage: "en",
+            "@id": absolute("#website"),
+            publisher: { "@id": absolute("#publisher") },
           }),
         }}
       />
@@ -64,7 +66,7 @@ export default function Home() {
             <span>Your rules.</span>
           </h1>
           <p className="hero-description">
-            Merge, compress, convert and more.
+            Merge, compress, convert PDF text to Word and more.
             <br />A whole PDF toolkit. Right in your browser.
             <br />
             <strong>No uploads. No sign-ups. No catch.</strong>
@@ -79,7 +81,7 @@ export default function Home() {
           </div>
           <div className="hero-footnote">
             <Check size={15} aria-hidden="true" /> 30 free tools <span>·</span> No added watermarks{" "}
-            <span>·</span> Open source
+            <span>·</span> On-device processing
           </div>
         </div>
         <div className="hero-art" aria-hidden="true">

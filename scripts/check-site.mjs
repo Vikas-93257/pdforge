@@ -98,13 +98,13 @@ for (const file of pages) {
 if (errors.length) console.error("Page validation issues:", errors);
 const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8"),
   listed = Array.from(sitemap.matchAll(/<loc>(.*?)<\/loc>/g), (m) => m[1]);
-assert.equal(new Set(listed).size, 41, "Expected 41 unique sitemap entries");
+assert.equal(new Set(listed).size, 45, "Expected 45 unique sitemap entries");
 assert.deepEqual(
   [...listed].sort(),
   [...canonicalURLs].sort(),
   "Sitemap and canonical pages must match",
 );
-assert.equal(pages.length, 41, "Expected 41 content pages");
+assert.equal(pages.length, 45, "Expected 45 content pages");
 assert.ok(fs.existsSync(path.join(root, ".nojekyll")));
 assert.ok(fs.readFileSync(path.join(root, "robots.txt"), "utf8").includes(site + "/sitemap.xml"));
 const manifest = JSON.parse(fs.readFileSync(path.join(root, "engines/manifest.json"), "utf8"));
@@ -132,14 +132,16 @@ for (const item of JSON.parse(fs.readFileSync(path.join(root, "source-assets.jso
     `Source asset hash mismatch: ${item.file}`,
   );
 }
+const proof = JSON.parse(fs.readFileSync("config/search-discovery.json", "utf8")).indexNow;
+assert.equal(fs.readFileSync(path.join(root, proof.keyFile), "utf8").trim(), proof.key);
 const exportInventory = JSON.parse(
   fs.readFileSync(path.join(root, "static-manifest.json"), "utf8"),
 );
 assert.equal(new Set(exportInventory.map((item) => item.file)).size, exportInventory.length);
 assert.equal(
   exportInventory.length,
-  files.length - 1,
-  "Static inventory must cover every file except itself",
+  files.length - 2,
+  "Static inventory covers public payloads; ownership proof is checked separately",
 );
 for (const item of exportInventory) {
   const target = path.resolve(root, item.file);
@@ -165,6 +167,7 @@ assert.match(
 const summary = {
   passed: errors.length === 0,
   exportFilesVerified: exportInventory.length,
+  ownershipVerificationFilesChecked: 1,
   contentPages: pages.length,
   uniqueTitles: seenTitles.size,
   uniqueDescriptions: seenDescriptions.size,

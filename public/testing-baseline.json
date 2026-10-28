@@ -1,0 +1,22 @@
+{
+  "scope": "Dated published functional baseline, not an every-file or security certification.",
+  "testedRelease": "1.1.0",
+  "testedDate": "2026-10-25",
+  "unitCasesPassed": 88,
+  "crossEngineBrowserCasesPassed": 228,
+  "browsers": [
+    "Chromium",
+    "Firefox",
+    "Linux WebKit"
+  ],
+  "nativeOutputChecksPassed": 30,
+  "publicHostBrowserCasesPassed": 76,
+  "publicHostNativeChecksPassed": 30,
+  "fixtureData": "Synthetic; not customer documents.",
+  "limits": [
+    "Linux WebKit is not real-device Safari/iOS certification.",
+    "PDF to Word is editable-text export, not exact layout/images/tables.",
+    "Technical lab SEO does not guarantee indexing/rank/AI inclusion.",
+    "Original application source remains private/restricted; upstream rights preserved."
+  ]
+}

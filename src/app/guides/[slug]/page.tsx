@@ -42,9 +42,9 @@ export default async function Guide({ params }: { params: Promise<{ slug: string
             headline: g.title,
             description: g.description,
             mainEntityOfPage: absolute(`guides/${slug}/`),
-            dateModified: "2026-10-25",
-            author: { "@type": "Organization", name: "PDFORGE" },
-            publisher: { "@type": "Organization", name: "PDFORGE" },
+            dateModified: g.updated || "2026-10-25",
+            author: { "@id": absolute("#publisher") },
+            publisher: { "@id": absolute("#publisher") },
           }),
         }}
       />

@@ -1,8 +1,12 @@
-# PDFORGE 1.1 — private-source deployment edition
+# PDFORGE 1.1.1 — private-source PDF tools
 
 **Your PDFs. Your device. Your rules.**
 
 Thirty free-to-use PDF tools, local browser processing, English/Hindi OCR, real AES-256 protection, image-based permanent redaction and a responsive interface. No account, document upload API, database, paid conversion service or added PDFORGE watermark.
+
+## Search/discovery release
+
+This SEO-only update targets the existing free project site. It adds accurate tool-specific content, guides and public synthetic evidence, without changing the processing engine or publishing the separate commercial beta. See [search-discovery implementation and owner actions](docs/SEARCH-DISCOVERY.md). No top-three rank, indexing or AI recommendation is guaranteed.
 
 ## Source and website visibility
 
