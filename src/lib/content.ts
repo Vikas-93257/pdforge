@@ -22,7 +22,7 @@ export const PAGES: Article[] = [
       {
         heading: "Built around the everyday",
         paragraphs: [
-          "PDFORGE brings 35 focused document tools into a single browser workspace: combining pages, shrinking files, making simple conversions, adding a signature, and preparing documents to share. All tools are free to use; there is no premium tier or PDFORGE watermark added to your output.",
+          "PDFORGE brings 37 focused document tools into a single browser workspace: combining pages, shrinking files, making simple conversions, adding a signature, and preparing documents to share. All tools are free to use; there is no premium tier or PDFORGE watermark added to your output.",
           "It is an alternative for common PDF tasks, not a claim to reproduce every feature of a desktop editor or another online service. Office conversion is simplified, OCR makes mistakes, and some damaged or unusual documents cannot be processed. Every tool explains its limits.",
         ],
       },

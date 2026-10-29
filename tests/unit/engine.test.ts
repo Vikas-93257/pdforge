@@ -11,6 +11,7 @@ import * as core from "../../src/lib/pdf/engine";
 import * as render from "../../src/lib/pdf/render";
 import * as secure from "../../src/lib/pdf/secure";
 import * as convert from "../../src/lib/pdf/convert";
+import * as pptx from "../../src/lib/pdf/pptx";
 import {
   validateSelection,
   identifyFile,
@@ -494,9 +495,9 @@ test("DOCX preflight rejects declared ZIP bombs without decompressing", async ()
     }
   assert.throws(() => convert.inspectDocxZip(b), /safe 150 MB/);
 });
-test("catalog contains exactly 35 unique implemented tools", () => {
-  assert.equal(TOOLS.length, 35);
-  assert.equal(new Set(TOOLS.map((t) => t.slug)).size, 35);
+test("catalog contains exactly 37 unique implemented tools", () => {
+  assert.equal(TOOLS.length, 37);
+  assert.equal(new Set(TOOLS.map((t) => t.slug)).size, 37);
   for (const t of TOOLS) {
     assert.ok(t.steps.length >= 3);
     assert.ok(t.limitation.length > 20);
@@ -628,6 +629,87 @@ test("PDF-to-Markdown keeps headings, lists and pipe tables", async () => {
   assert.match(md, /\| --- \| --- \|/);
   assert.match(md, /^---$/m);
   await assert.rejects(convert.pdfToMarkdown(await file("scanned.pdf")), /Use OCR/);
+});
+test("Two-column PDFs keep column reading order", async () => {
+  const pages = await convert.extractTextPages(await file("two-column.pdf"));
+  assert.equal(pages[0].lines.length, 25);
+  assert.ok(pages[0].lines.slice(1, 13).every((l) => l.startsWith("Left")));
+  assert.ok(pages[0].lines.slice(13, 25).every((l) => l.startsWith("Right")));
+  assert.ok(!pages[0].lines.some((l) => l.includes("Left") && l.includes("Right")));
+});
+test("Ruled tables split on grid lines, not gaps", async () => {
+  const pages = await convert.extractTextPages(await file("ruled-table.pdf"));
+  assert.equal(pages[0].ruledCols.size, 5);
+  const table = pages[0].blocks.find((b) => b.type === "table");
+  assert.ok(table && table.type === "table");
+  assert.deepEqual(table.grid, [
+    ["Item", "Qty", "Price"],
+    ["Apples", "12", "3.50"],
+    ["Bread", "2", "1.20"],
+    ["Milk", "6", "4.80"],
+    ["Cheese", "3", "2.10"],
+  ]);
+  const records = await convert.pdfToCsv(await file("ruled-table.pdf"));
+  assert.match(records, /"Apples"/);
+  assert.ok(!records.includes("Apples 12"));
+});
+test("PDF-to-Word embeds extracted images in reading order", async () => {
+  const pages = await convert.extractTextPages(await file("text-image.pdf"), undefined, env);
+  assert.deepEqual(
+    pages[0].blocks.map((b) => b.type),
+    ["heading", "paragraph", "image", "paragraph", "paragraph"],
+  );
+  assert.equal(pages[0].images.length, 1);
+  assert.ok(pages[0].images[0].png && pages[0].images[0].png.length > 1000);
+  const headless = await convert.extractTextPages(await file("text-image.pdf"));
+  assert.equal(headless[0].images.length, 1);
+  assert.equal(headless[0].images[0].png, null);
+  const bytes = await convert.pdfToDocx(await file("text-image.pdf"), undefined, env);
+  const zip = await JSZip.loadAsync(bytes);
+  const xml = await zip.file("word/document.xml")!.async("string");
+  assert.match(xml, /w:drawing/);
+  const plain = await convert.pdfToDocx(await file("three-pages.pdf"), undefined, env);
+  const zip2 = await JSZip.loadAsync(plain);
+  assert.ok(!(await zip2.file("word/document.xml")!.async("string")).includes("w:drawing"));
+});
+test("PDF-to-Markdown embeds small images and keeps the OCR redirect", async () => {
+  const md = await convert.pdfToMarkdown(await file("text-image.pdf"), undefined, env);
+  assert.match(md, /!\[Image 1 on page 1\]\(data:image\/png;base64,[A-Za-z0-9+/]+=*\)/);
+  await assert.rejects(convert.pdfToXlsx(await file("scanned.pdf")), /Use OCR/);
+  await assert.rejects(convert.pdfToCsv(await file("scanned.pdf")), /Use OCR/);
+});
+test("PDF-to-PowerPoint builds one editable slide per page", async () => {
+  const out = await pptx.pdfToPptx(await file("three-pages.pdf"));
+  assert.equal(out.slides, 3);
+  assert.equal(out.truncated, false);
+  const zip = await JSZip.loadAsync(out.bytes);
+  assert.ok(zip.file("ppt/presentation.xml"));
+  const slide = await zip.file("ppt/slides/slide1.xml")!.async("string");
+  assert.match(slide, /ALPHA PAGE ONE/);
+  assert.match(slide, /<a:tbl>/);
+  await assert.rejects(pptx.pdfToPptx(await file("scanned.pdf")), /Use OCR/);
+});
+test("PDF-to-PowerPoint embeds page images as slide pictures", async () => {
+  const out = await pptx.pdfToPptx(await file("text-image.pdf"), undefined, env);
+  assert.equal(out.slides, 1);
+  const zip = await JSZip.loadAsync(out.bytes);
+  const slide = await zip.file("ppt/slides/slide1.xml")!.async("string");
+  assert.match(slide, /<p:pic>/);
+  const media = zip.file("ppt/media/image1.png");
+  assert.ok(media);
+  assert.ok((await media!.async("uint8array")).length > 1000);
+});
+test("PowerPoint-to-PDF renders titles, bullets, tables and images", async () => {
+  const out = await pptx.pptxToPdf(await file("sample.pptx"));
+  assert.match(await text(out.bytes), /ALPHA PAGE TWO/);
+  assert.match(await text(out.bytes), /Notebook/);
+  assert.ok(out.warnings.some((w) => /SmartArt/.test(w)));
+  const roundTrip = await pptx.pptxToPdf(
+    (await pptx.pdfToPptx(await file("text-image.pdf"), undefined, env)).bytes,
+  );
+  assert.match(await text(roundTrip.bytes), /MIXED CONTENT PROBE/);
+  assert.ok(roundTrip.bytes.length > 1000);
+  await assert.rejects(pptx.pptxToPdf(await file("sample.xlsx")), /presentation/);
 });
 test("PDF-to-XLSX writes a genuine workbook with numeric cells", async () => {
   const out = await convert.pdfToXlsx(await file("three-pages.pdf"));
@@ -777,6 +859,18 @@ test("dispatcher runs every new conversion end to end", async () => {
   );
   const wordPdf = await executeTool("word-to-pdf", [word], DEFAULT_OPTIONS, hooks);
   assert.match(await text(wordPdf.files[0].bytes), /Document conversion fixture 2026/);
+  const deck = await executeTool("pdf-to-powerpoint", [pdf], DEFAULT_OPTIONS, hooks);
+  assert.match(deck.files[0].name, /\.pptx$/);
+  assert.ok((await JSZip.loadAsync(deck.files[0].bytes)).file("ppt/presentation.xml"));
+  assert.match(deck.notes.join(" "), /3 slides/);
+  const slides = local(
+    "sample.pptx",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    await file("sample.pptx"),
+  );
+  const slidePdf = await executeTool("powerpoint-to-pdf", [slides], DEFAULT_OPTIONS, hooks);
+  assert.match(await text(slidePdf.files[0].bytes), /ALPHA PAGE ONE/);
+  assert.ok(slidePdf.notes.some((n) => /SmartArt/.test(n)));
   const form = local("form.pdf", "application/pdf", await file("form.pdf"));
   const filled = await executeTool(
     "fill-pdf-form",

@@ -4,6 +4,7 @@ import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
 import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun } from "docx";
 import { protectPdf } from "../src/lib/pdf/secure";
 import { buildXlsx } from "../src/lib/pdf/xlsx";
+import { pdfToPptx } from "../src/lib/pdf/pptx";
 const dir = "tests/fixtures";
 await fs.mkdir(dir, { recursive: true });
 async function simple(names: string[]) {
@@ -88,6 +89,92 @@ h.fillText("नमस्ते भारत", 70, 180);
 h.fillText("हिंदी दस्तावेज़", 70, 330);
 h.fillText("2026", 70, 480);
 await fs.writeFile(`${dir}/hindi-scan.png`, hc.toBuffer("image/png"));
+{
+  const d = await PDFDocument.create(),
+    font = await d.embedFont(StandardFonts.Helvetica),
+    bold = await d.embedFont(StandardFonts.HelveticaBold),
+    page = d.addPage([612, 792]);
+  page.drawText("TWO COLUMN PROBE 2026", { x: 50, y: 740, size: 20, font: bold });
+  for (let r = 0; r < 12; r++) {
+    page.drawText(`Left column narrative row ${r + 1} continues`, {
+      x: 50,
+      y: 700 - r * 24,
+      size: 11,
+      font,
+    });
+    page.drawText(`Right column sidebar note ${r + 1} here`, {
+      x: 330,
+      y: 700 - r * 24,
+      size: 11,
+      font,
+    });
+  }
+  await fs.writeFile(`${dir}/two-column.pdf`, await d.save());
+}
+{
+  const d = await PDFDocument.create(),
+    font = await d.embedFont(StandardFonts.Helvetica),
+    bold = await d.embedFont(StandardFonts.HelveticaBold),
+    page = d.addPage([612, 792]);
+  page.drawText("RULED TABLE PROBE 2026", { x: 50, y: 740, size: 20, font: bold });
+  const xs = [50, 95, 180, 290],
+    ys = [700, 665, 630, 595, 560, 525];
+  for (const x of xs)
+    page.drawLine({
+      start: { x, y: 525 },
+      end: { x, y: 700 },
+      thickness: 1,
+      color: rgb(0, 0, 0),
+    });
+  for (const y of ys)
+    page.drawLine({
+      start: { x: 50, y },
+      end: { x: 290, y },
+      thickness: 1,
+      color: rgb(0, 0, 0),
+    });
+  const grid = [
+    ["Item", "Qty", "Price"],
+    ["Apples", "12", "3.50"],
+    ["Bread", "2", "1.20"],
+    ["Milk", "6", "4.80"],
+    ["Cheese", "3", "2.10"],
+  ];
+  for (let r = 0; r < grid.length; r++)
+    for (let c = 0; c < grid[r].length; c++)
+      page.drawText(grid[r][c], { x: xs[c] + 3, y: ys[r] - 22, size: 11, font: r ? font : bold });
+  await fs.writeFile(`${dir}/ruled-table.pdf`, await d.save());
+}
+{
+  const d = await PDFDocument.create(),
+    font = await d.embedFont(StandardFonts.Helvetica),
+    bold = await d.embedFont(StandardFonts.HelveticaBold),
+    page = d.addPage([612, 792]);
+  page.drawText("MIXED CONTENT PROBE 2026", { x: 50, y: 740, size: 20, font: bold });
+  page.drawText("Introductory paragraph placed above the figure.", {
+    x: 50,
+    y: 705,
+    size: 12,
+    font,
+  });
+  const fig = createCanvas(200, 120),
+    fx = fig.getContext("2d");
+  fx.fillStyle = "#1c6746";
+  fx.fillRect(0, 0, 200, 120);
+  fx.fillStyle = "#edf4e6";
+  fx.font = "bold 26px sans-serif";
+  fx.fillText("FIGURE-A", 28, 68);
+  const embedded = await d.embedPng(fig.toBuffer("image/png"));
+  page.drawImage(embedded, { x: 100, y: 500, width: 200, height: 120 });
+  page.drawText("Figure A caption sits directly below the image.", {
+    x: 100,
+    y: 480,
+    size: 11,
+    font,
+  });
+  page.drawText("Closing paragraph after the captioned figure.", { x: 50, y: 440, size: 12, font });
+  await fs.writeFile(`${dir}/text-image.pdf`, await d.save());
+}
 const rich = await PDFDocument.load(one);
 rich.setTitle("PRIVATE DOCUMENT TITLE");
 rich.setAuthor("PRIVATE AUTHOR 9182");
@@ -161,6 +248,9 @@ const workbook = await buildXlsx([
 ]);
 if (workbook.truncated) throw new Error("Synthetic workbook exceeded the cell budget.");
 await fs.writeFile(`${dir}/sample.xlsx`, workbook.bytes);
+const deck = await pdfToPptx(three);
+if (deck.slides !== 3 || deck.truncated) throw new Error("Synthetic deck is incomplete.");
+await fs.writeFile(`${dir}/sample.pptx`, deck.bytes);
 await fs.writeFile(
   `${dir}/text.txt`,
   "A local text document.\nहिंदी दस्तावेज़ English 2026\nNo uploads.",

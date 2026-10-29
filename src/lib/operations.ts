@@ -99,13 +99,14 @@ export const ACCEPT: Record<ToolDef["accept"], string> = {
   image: ".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp",
   document: ".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   spreadsheet: ".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  presentation: ".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation",
   text: ".txt,text/plain",
   "pdf-image": ".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp",
 };
 export function identifyFile(
   bytes: Uint8Array,
   name: string,
-): "pdf" | "image" | "document" | "spreadsheet" | "text" | "invalid" {
+): "pdf" | "image" | "document" | "spreadsheet" | "presentation" | "text" | "invalid" {
   if (new TextDecoder("latin1").decode(bytes.subarray(0, 1024)).includes("%PDF-")) return "pdf";
   if (
     (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) ||
@@ -130,6 +131,14 @@ export function identifyFile(
     bytes[3] === 4
   )
     return "spreadsheet";
+  if (
+    /\.pptx$/i.test(name) &&
+    bytes[0] === 0x50 &&
+    bytes[1] === 0x4b &&
+    bytes[2] === 3 &&
+    bytes[3] === 4
+  )
+    return "presentation";
   if (/\.txt$/i.test(name)) {
     try {
       const t = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
@@ -277,7 +286,7 @@ export async function executeTool(
         mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       });
       notes.push(
-        "Structured export: headings, simple tables and bold/italic are detected. Multi-column layouts, charts and images are simplified, not reconstructed.",
+        "Structured export: headings, bordered and simple tables, bold/italic and embedded page images are detected. Multi-column order, charts and original fonts are simplified, not reconstructed.",
       );
       break;
     case "word-to-pdf":
@@ -303,7 +312,7 @@ export async function executeTool(
       previewText = await (await import("./pdf/convert")).pdfToMarkdown(bytes, signal);
       text(previewText, `${base}.md`, "text/markdown;charset=utf-8");
       notes.push(
-        "Headings, lists and simple tables become Markdown. Multi-column layouts and images are simplified.",
+        "Headings, lists and simple tables become Markdown, with small page images embedded. Multi-column order and appearance are simplified.",
       );
       break;
     case "pdf-to-excel": {
@@ -322,6 +331,28 @@ export async function executeTool(
     }
     case "excel-to-pdf": {
       const converted = await (await import("./pdf/convert")).xlsxToPdf(bytes, signal);
+      pdf(converted.bytes);
+      for (const warning of converted.warnings) notes.push(warning);
+      break;
+    }
+    case "pdf-to-powerpoint": {
+      const converted = await (await import("./pdf/pptx")).pdfToPptx(bytes, signal);
+      output.push({
+        bytes: converted.bytes,
+        name: `${base}.pptx`,
+        mime: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      });
+      notes.push(
+        `Editable deck with ${converted.slides} ${converted.slides === 1 ? "slide" : "slides"}, one per page. Text, simple tables and embedded images become editable shapes; charts and precise layout are simplified.`,
+      );
+      if (converted.truncated)
+        notes.push(
+          "Some crowded pages were truncated to fit readable slides; check the last shapes on each slide.",
+        );
+      break;
+    }
+    case "powerpoint-to-pdf": {
+      const converted = await (await import("./pdf/pptx")).pptxToPdf(bytes, signal);
       pdf(converted.bytes);
       for (const warning of converted.warnings) notes.push(warning);
       break;

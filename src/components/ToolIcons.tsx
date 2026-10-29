@@ -31,6 +31,7 @@ import {
   FileSpreadsheet,
   FormInput,
   ScrollText,
+  Presentation,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 export const TOOL_ICONS: Record<string, LucideIcon> = {
@@ -67,6 +68,7 @@ export const TOOL_ICONS: Record<string, LucideIcon> = {
   "file-sheet": FileSpreadsheet,
   form: FormInput,
   summary: ScrollText,
+  slides: Presentation,
 };
 export function ToolIcon({
   name,

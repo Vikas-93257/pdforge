@@ -204,13 +204,13 @@ export const DISCOVERY: Record<string, DiscoveryEntry> = {
   "pdf-to-word": {
     title: "PDF to Word Converter — Free Structured DOCX, No Upload",
     description:
-      "Convert selectable PDF text to a structured Word DOCX in your browser. Headings and simple tables are detected; complex layouts and images are simplified.",
+      "Convert selectable PDF text to a structured Word DOCX in your browser. Headings, bordered tables and embedded page images are detected; multi-column order and charts are simplified.",
     usefulFor:
-      "Recover editable paragraphs from a text-based PDF when document confidentiality matters more than matching every layout detail. The output is genuine DOCX with detected headings, simple tables and styling, not a renamed PDF or a page-image slideshow.",
+      "Recover editable paragraphs from a text-based PDF when document confidentiality matters more than matching every layout detail. The output is genuine DOCX with detected headings, bordered and simple tables, styling and embedded page images, not a renamed PDF or a page-image slideshow.",
     produces:
-      "A structured Word-compatible OOXML .docx file with headings, simple text tables, lists and bold/italic runs. The public synthetic before/after sample below demonstrates a simple text case; it does not prove complex-layout fidelity.",
+      "A structured Word-compatible OOXML .docx file with headings, bordered and simple text tables, lists, bold/italic runs and embedded page images. The public synthetic before/after sample below demonstrates a simple text case; it does not prove complex-layout fidelity.",
     watchFor:
-      "Simple text tables are detected but complex layouts can shift: charts, original images and fonts are not reconstructed, multi-column reading order can be wrong, and a scanned or textless PDF needs OCR first. Password-encrypted input needs an opening/owner password you already know; this is not password recovery.",
+      "Bordered and simple text tables are detected but complex layouts can shift: charts and original fonts are not reconstructed, multi-column reading order can be wrong, and a scanned or textless PDF needs OCR first. Password-encrypted input needs an opening/owner password you already know; this is not password recovery.",
     guide: {
       slug: "pdf-to-word-without-upload",
       label: "PDF to Word without uploading: what stays editable?",
@@ -594,6 +594,47 @@ export const DISCOVERY: Record<string, DiscoveryEntry> = {
         slug: "pdf-to-excel",
         label: "Convert PDF tables to Excel",
         reason: "Rebuild workbook data from a text-based PDF in the other direction.",
+      },
+    ],
+  },
+  "pdf-to-powerpoint": {
+    title: "PDF to PowerPoint Converter — Free Editable Slides, No Upload",
+    description:
+      "Rebuild each PDF page as an editable PowerPoint slide locally. Detected text, tables and images become editable shapes; charts and layout are simplified.",
+    usefulFor:
+      "Turn a text-based PDF report or handout into an editable slide deck without sending it to a conversion cloud. Each page becomes one widescreen slide with a detected title, text, tables and embedded page images.",
+    produces:
+      "A genuine OOXML .pptx deck with one slide per PDF page, up to 500 pages. Slide text, simple tables and embedded images stay editable in PowerPoint, Keynote or Impress.",
+    watchFor:
+      "This is content reconstruction, not pixel-perfect conversion: charts, precise positioning and original fonts are simplified, and crowded pages may truncate to fit readable slides. Scans need OCR first.",
+    next: [
+      {
+        slug: "powerpoint-to-pdf",
+        label: "Convert slides back to PDF",
+        reason: "Render an edited deck into searchable PDF pages in the other direction.",
+      },
+      {
+        slug: "pdf-to-word",
+        label: "Convert to Word instead",
+        reason: "Choose flowing DOCX text when slides are unnecessary.",
+      },
+    ],
+  },
+  "powerpoint-to-pdf": {
+    title: "PowerPoint to PDF Converter — Free, On Your Device",
+    description:
+      "Convert PPTX slides into a searchable text-first PDF locally. Titles, bullets, tables and images convert; animations and charts are not reproduced.",
+    usefulFor:
+      "Create a shareable searchable PDF from a .pptx deck without sending business slides to a conversion API. Each slide becomes titled sections with bullets, tables and embedded images in shape order.",
+    produces:
+      "Searchable PDF pages with one headed section per slide, using slide text, simple tables and embedded PNG/JPEG images with simplified styling.",
+    watchFor:
+      "PPTX only; legacy .ppt and macro-enabled files are rejected. Animations, transitions, speaker notes, charts and SmartArt are not reproduced; only embedded PNG/JPEG images convert.",
+    next: [
+      {
+        slug: "pdf-to-powerpoint",
+        label: "Convert PDF pages to slides",
+        reason: "Rebuild editable slides from a text-based PDF in the other direction.",
       },
     ],
   },

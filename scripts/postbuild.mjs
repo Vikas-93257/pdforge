@@ -27,7 +27,7 @@ fs.writeFileSync(
     name: "PDFORGE — Free PDF tools on your device",
     short_name: "PDFORGE",
     description:
-      "35 free PDF tools that run on your device. No uploads, accounts or subscriptions.",
+      "37 free PDF tools that run on your device. No uploads, accounts or subscriptions.",
     id: `${basePath}/`,
     start_url: `${basePath}/`,
     scope: `${basePath}/`,

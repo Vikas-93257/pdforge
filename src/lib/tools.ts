@@ -5,7 +5,7 @@ export interface ToolDef {
   description: string;
   category: ToolCategory;
   icon: string;
-  accept: "pdf" | "image" | "document" | "spreadsheet" | "text" | "pdf-image";
+  accept: "pdf" | "image" | "document" | "spreadsheet" | "presentation" | "text" | "pdf-image";
   multiple: boolean;
   cta: string;
   steps: string[];
@@ -374,7 +374,7 @@ export const TOOLS: ToolDef[] = [
       "Process locally, review the result, and download your output.",
     ],
     limitation:
-      "Headings, simple text tables, lists and bold/italic are detected; multi-column layouts, charts, images and original fonts are simplified. Run OCR first for scanned pages.",
+      "Headings, bordered and simple text tables, lists, bold/italic and embedded page images are detected; multi-column order, charts and original fonts are simplified. Run OCR first for scanned pages.",
     faqs: [
       {
         q: "Is PDF to Word free to use?",
@@ -386,7 +386,7 @@ export const TOOLS: ToolDef[] = [
       },
       {
         q: "What are the important limitations?",
-        a: "Headings, simple text tables, lists and bold/italic are detected; multi-column layouts, charts, images and original fonts are simplified. Run OCR first for scanned pages.",
+        a: "Headings, bordered and simple text tables, lists, bold/italic and embedded page images are detected; multi-column order, charts and original fonts are simplified. Run OCR first for scanned pages.",
       },
     ],
   },
@@ -1038,6 +1038,68 @@ export const TOOLS: ToolDef[] = [
       {
         q: "What are the important limitations?",
         a: "XLSX only, not legacy XLS. Merged cells, charts, images and custom number formats are simplified; dates use stored values. Macro-enabled files are rejected.",
+      },
+    ],
+  },
+  {
+    slug: "pdf-to-powerpoint",
+    name: "PDF to PowerPoint",
+    description: "Turn each PDF page into an editable slide with text, tables and images.",
+    category: "convert",
+    icon: "slides",
+    accept: "pdf",
+    multiple: false,
+    cta: "Convert to PowerPoint",
+    steps: [
+      "Choose your file. Nothing is uploaded.",
+      "Rebuild one editable slide per page with detected headings, tables and images.",
+      "Process locally, review the result, and download your output.",
+    ],
+    limitation:
+      "One slide per page, up to 500 pages. Text, simple tables and embedded images are rebuilt as editable shapes; charts, precise layout and original fonts are simplified. Run OCR first for scans.",
+    faqs: [
+      {
+        q: "Is PDF to PowerPoint free to use?",
+        a: "Yes. There are no subscriptions, sign-ups, daily-use quotas or premium tools. Your browser’s memory and the published file-safety limits still apply.",
+      },
+      {
+        q: "Are my files uploaded to a server?",
+        a: "The processing engine runs in your browser. Document contents, filenames or passwords are not sent to a processing server. Refreshing or clearing the workspace removes the app’s references to your files.",
+      },
+      {
+        q: "What are the important limitations?",
+        a: "One slide per page, up to 500 pages. Text, simple tables and embedded images are rebuilt as editable shapes; charts, precise layout and original fonts are simplified. Run OCR first for scans.",
+      },
+    ],
+  },
+  {
+    slug: "powerpoint-to-pdf",
+    name: "PowerPoint to PDF",
+    description: "Convert a PPTX locally into a searchable text-first PDF.",
+    category: "convert",
+    icon: "slides",
+    accept: "presentation",
+    multiple: false,
+    cta: "Convert to PDF",
+    steps: [
+      "Choose your file. Nothing is uploaded.",
+      "Convert slide titles, bullets, tables and images into searchable PDF pages.",
+      "Process locally, review the result, and download your output.",
+    ],
+    limitation:
+      "PPTX only, not legacy PPT. Text, tables and embedded PNG/JPEG images convert to searchable pages; animations, transitions, notes, charts and SmartArt are not reproduced. Macro-enabled files are rejected.",
+    faqs: [
+      {
+        q: "Is PowerPoint to PDF free to use?",
+        a: "Yes. There are no subscriptions, sign-ups, daily-use quotas or premium tools. Your browser’s memory and the published file-safety limits still apply.",
+      },
+      {
+        q: "Are my files uploaded to a server?",
+        a: "The processing engine runs in your browser. Document contents, filenames or passwords are not sent to a processing server. Refreshing or clearing the workspace removes the app’s references to your files.",
+      },
+      {
+        q: "What are the important limitations?",
+        a: "PPTX only, not legacy PPT. Text, tables and embedded PNG/JPEG images convert to searchable pages; animations, transitions, notes, charts and SmartArt are not reproduced. Macro-enabled files are rejected.",
       },
     ],
   },

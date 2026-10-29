@@ -94,6 +94,7 @@ for (const tool of TOOLS)
     if (tool.slug === "jpg-to-pdf") names = ["image.png", "image.webp"];
     if (tool.slug === "word-to-pdf") names = ["sample.docx"];
     if (tool.slug === "excel-to-pdf") names = ["sample.xlsx"];
+    if (tool.slug === "powerpoint-to-pdf") names = ["sample.pptx"];
     if (tool.slug === "fill-pdf-form") names = ["form.pdf"];
     if (tool.slug === "text-to-pdf") names = ["text.txt"];
     if (tool.slug === "repair") names = ["repairable.pdf"];
@@ -182,6 +183,17 @@ for (const tool of TOOLS)
     } else if (tool.slug === "excel-to-pdf") {
       await checkPdf(actual[0].bytes, 1, "Notebook");
       expect(await pdfToText(actual[0].bytes)).toContain("fixture 2026");
+    } else if (tool.slug === "pdf-to-powerpoint") {
+      expect(actual[0].name).toMatch(/\.pptx$/);
+      const zip = await JSZip.loadAsync(actual[0].bytes);
+      expect(zip.file("ppt/presentation.xml")).not.toBeNull();
+      expect(zip.file("ppt/slides/slide3.xml")).not.toBeNull();
+      const slide = await zip.file("ppt/slides/slide1.xml")!.async("string");
+      expect(slide).toContain("ALPHA PAGE ONE");
+      expect(slide).toContain("<a:tbl>");
+    } else if (tool.slug === "powerpoint-to-pdf") {
+      await checkPdf(actual[0].bytes, 1, "ALPHA PAGE ONE");
+      expect(await pdfToText(actual[0].bytes)).toContain("Notebook");
     } else if (tool.slug === "summarize") {
       expect(actual[0].name).toMatch(/-summary\.txt$/);
       const body = new TextDecoder().decode(actual[0].bytes);

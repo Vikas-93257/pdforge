@@ -27,10 +27,10 @@ async function resultBytes(page: Page) {
 }
 test("home search, filters and actual client-side navigation", async ({ page }) => {
   await page.goto("");
-  await expect(page.locator(".tool-grid .tool-card")).toHaveCount(35);
+  await expect(page.locator(".tool-grid .tool-card")).toHaveCount(37);
   await page.getByRole("button", { name: "Secure", exact: true }).click();
   await expect(page.locator(".tool-grid .tool-card")).toHaveCount(4);
-  await page.getByRole("button", { name: /All tools 35/ }).click();
+  await page.getByRole("button", { name: /All tools 37/ }).click();
   await page.getByRole("searchbox", { name: "Search PDF tools" }).fill("compress");
   await expect(page.locator(".tool-grid .tool-card")).toHaveCount(1);
   await page.locator(".tool-grid .tool-card").click();
@@ -41,11 +41,11 @@ test("search has a keyboard-accessible no-results recovery", async ({ page }) =>
   await page.goto("");
   // Wait for client hydration before typing: filling pre-hydration sets the DOM
   // value without reaching React state, which flakes on slower engines.
-  await expect(page.locator(".tool-grid .tool-card")).toHaveCount(35);
+  await expect(page.locator(".tool-grid .tool-card")).toHaveCount(37);
   await page.getByRole("searchbox").fill("does-not-exist-731");
   await expect(page.getByRole("heading", { name: /No tools found/ })).toBeVisible();
   await page.getByRole("button", { name: "Show all tools" }).click();
-  await expect(page.locator(".tool-grid .tool-card")).toHaveCount(35);
+  await expect(page.locator(".tool-grid .tool-card")).toHaveCount(37);
 });
 for (const width of [320, 390, 768, 1440])
   test(`no horizontal overflow at ${width}px`, async ({ page }) => {

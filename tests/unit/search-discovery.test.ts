@@ -32,13 +32,24 @@ test("discovery workflows and guides point only to actual supported routes", () 
       );
   }
 });
-test("PDF-to-Word discovery copy does not promise original images/charts/full fidelity", () => {
+test("PDF-to-Word discovery copy promises embedded images but not charts/full fidelity", () => {
   const d = DISCOVERY["pdf-to-word"];
   assert.match(d.watchFor, /not reconstructed/);
   assert.match(d.watchFor, /OCR/);
-  assert.match(d.description!, /complex layouts and images are simplified/);
+  assert.match(d.description!, /bordered tables and embedded page images are detected/);
   assert.match(d.produces, /simple text tables/);
+  assert.match(d.produces, /embedded page images/);
   assert.doesNotMatch(d.produces, /exact layout|pixel-perfect|charts are rebuilt/);
+});
+test("PowerPoint discovery copy states the editable-shapes scope honestly", () => {
+  const toSlides = DISCOVERY["pdf-to-powerpoint"];
+  assert.match(toSlides.produces, /one slide per PDF page/);
+  assert.match(toSlides.watchFor, /not pixel-perfect/);
+  assert.match(toSlides.watchFor, /OCR/);
+  assert.doesNotMatch(toSlides.produces, /exact layout|pixel-perfect|charts are rebuilt/);
+  const toPdf = DISCOVERY["powerpoint-to-pdf"];
+  assert.match(toPdf.produces, /one headed section per slide/);
+  assert.match(toPdf.watchFor, /SmartArt are not reproduced/);
 });
 test("published Word conversion copy explains text-first default and visual option", () => {
   const d = DISCOVERY["word-to-pdf"];

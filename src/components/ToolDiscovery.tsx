@@ -7,6 +7,7 @@ const inputs = {
   image: "JPG, PNG or WebP",
   document: "Word OOXML (.docx)",
   spreadsheet: "Excel OOXML (.xlsx)",
+  presentation: "PowerPoint OOXML (.pptx)",
   text: "UTF-8 text or typed text",
   "pdf-image": "PDF, JPG, PNG or WebP",
 };

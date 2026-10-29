@@ -21,7 +21,7 @@ test("PDF to Word has specific metadata, visible limitations, examples and a rea
 }) => {
   await page.goto("tools/pdf-to-word/");
   await expect(page).toHaveTitle(/PDF to Word Converter/);
-  await expect(page.locator(".tool-discovery")).toContainText("charts, original images and fonts");
+  await expect(page.locator(".tool-discovery")).toContainText("charts and original fonts");
   await expect(page.locator(".tool-discovery")).toContainText("not reconstructed");
   await expect(
     page.getByRole("link", { name: "Download actual DOCX output", exact: true }),
@@ -66,8 +66,8 @@ test("testing page labels dated evidence and avoids fake ratings/certifications"
   await expect(page.locator(".article-content")).toContainText("dated release");
   await expect(page.locator(".article-content")).toContainText("not every possible document");
   const record = await (await request.get("testing-baseline.json")).json();
-  expect(record.testedRelease).toBe("1.2.0");
-  expect(record.crossEngineBrowserCasesPassed).toBe(267);
+  expect(record.testedRelease).toBe("1.3.0");
+  expect(record.crossEngineBrowserCasesPassed).toBe(273);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 test("tool discovery content remains accessible and reflows at 320px", async ({ page }) => {

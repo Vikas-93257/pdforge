@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.3.0 — 2026-10-30 (slides + extraction release)
+
+- Added two real tools: PDF to PowerPoint (one editable slide per page with
+  detected text, tables and embedded images) and PowerPoint to PDF (searchable
+  text-first pages from slide titles, bullets, tables and images). Total is now
+  37 tools; still 100% local.
+- Added two-column reading order: sustained vertical gutters split column text
+  before row grouping, so side-by-side columns no longer merge into one line.
+- Added bordered-table detection from PDF vector grid lines: ruled cells split
+  exactly on drawn rules instead of positional gaps.
+- Embedded native page images into Word, Markdown and PowerPoint exports in
+  reading order; spreadsheets keep honest image placeholders.
+- Image-only PDFs still redirect to OCR instead of producing empty-image files.
+- No accounts, uploads, paywall, e-sign cloud, AI cloud or repository-visibility
+  changes; original application source stays private/restricted.
+
 ## 1.2.0 — 2026-10-30 (conversion-quality release)
 
 - Added five real tools: PDF to Markdown, PDF to Excel, Excel to PDF, fillable-form

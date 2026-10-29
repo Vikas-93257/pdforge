@@ -73,6 +73,7 @@ try {
   for (const [slug, name] of [
     ["pdf-to-word", "three-pages.docx"],
     ["pdf-to-excel", "three-pages.xlsx"],
+    ["pdf-to-powerpoint", "three-pages.pptx"],
   ]) {
     const target = path.join("reports/downloads", slug, name),
       checked = spawnSync(
@@ -109,6 +110,18 @@ try {
   assert.match(wordText.stdout, /Document conversion fixture 2026/);
   results.push({
     check: "Independent Poppler reads text-first Word-to-PDF output",
+    result: "PASS",
+  });
+  const slidesText = spawnSync(
+    "pdftotext",
+    ["reports/downloads/powerpoint-to-pdf/sample-powerpoint-to-pdf.pdf", "-"],
+    { encoding: "utf8" },
+  );
+  assert.equal(slidesText.status, 0);
+  assert.match(slidesText.stdout, /ALPHA PAGE ONE/);
+  assert.match(slidesText.stdout, /Notebook/);
+  results.push({
+    check: "Independent Poppler reads text-first PowerPoint-to-PDF output",
     result: "PASS",
   });
   const markdown = await fs.readFile("reports/downloads/pdf-to-markdown/three-pages.md", "utf8");

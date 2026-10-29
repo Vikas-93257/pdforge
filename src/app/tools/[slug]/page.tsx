@@ -173,7 +173,7 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
             <div className="section-heading">
               <h2>One thing leads to another.</h2>
               <Link href="/#tools" className="text-link" prefetch={false}>
-                All 35 tools <ArrowRight size={16} aria-hidden="true" />
+                All 37 tools <ArrowRight size={16} aria-hidden="true" />
               </Link>
             </div>
             <div className="related-grid">

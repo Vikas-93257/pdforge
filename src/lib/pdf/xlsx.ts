@@ -10,7 +10,12 @@ export const XLSX_LIMITS = {
 
 export function inspectOfficeZip(
   bytes: Uint8Array,
-  opts: { required: string; container: "DOCX" | "XLSX"; document: string; archive: string },
+  opts: {
+    required: string;
+    container: "DOCX" | "XLSX" | "PPTX";
+    document: string;
+    archive: string;
+  },
 ) {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   let end = -1;

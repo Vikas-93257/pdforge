@@ -1,5 +1,5 @@
 import type { PDFFont } from "pdf-lib";
-import { openDocument, checkAbort } from "./render";
+import { openDocument, checkAbort, browserEnv, type CanvasEnv } from "./render";
 import { PdfError } from "./engine";
 import { inspectOfficeZip, buildXlsx, readXlsx, xmlDecode, type XlsxData } from "./xlsx";
 
@@ -20,13 +20,26 @@ export type TextBlock =
   | { type: "heading"; level: 1 | 2 | 3; text: string }
   | { type: "paragraph"; text: string; runs: TextRun[] }
   | { type: "list"; ordered: boolean; items: string[] }
-  | { type: "table"; grid: string[][] };
+  | { type: "table"; grid: string[][] }
+  | { type: "image"; index: number; alt: string };
+
+export type ExtractedImage = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  pixelWidth: number;
+  pixelHeight: number;
+  png: Uint8Array | null;
+};
 
 export type ExtractedPage = {
   page: number;
   lines: string[];
   rows: TextItem[][];
   blocks: TextBlock[];
+  images: ExtractedImage[];
+  ruledCols: Map<number, string[]>;
 };
 
 const BOLD_FONT = /(bold|black|heavy|demi)/i;
@@ -35,6 +48,7 @@ const ITALIC_FONT = /(italic|oblique|slanted)/i;
 export async function extractTextPages(
   bytes: Uint8Array,
   signal?: AbortSignal,
+  env?: CanvasEnv,
 ): Promise<ExtractedPage[]> {
   const { doc, destroy } = await openDocument(bytes),
     pages: ExtractedPage[] = [];
@@ -67,21 +81,11 @@ export async function extractTextPages(
             );
         }
       }
-      items.sort((a, b) => b.y - a.y || a.x - b.x);
-      const rows: TextItem[][] = [];
-      let current: TextItem[] = [],
-        currentY: number | null = null;
-      for (const item of items) {
-        if (currentY === null || Math.abs(item.y - currentY) <= 2.5) {
-          current.push(item);
-          currentY ??= item.y;
-        } else {
-          rows.push(current.sort((a, b) => a.x - b.x));
-          current = [item];
-          currentY = item.y;
-        }
-      }
-      if (current.length) rows.push(current.sort((a, b) => a.x - b.x));
+      const rows = groupColumnRows(items);
+      const opsPage = page as unknown as OpListPage;
+      const graphics = await collectGraphics(opsPage);
+      const ruledCols = ruledColumns(rows, detectRuledGrids(graphics.segments));
+      const images = await collectImages(opsPage, graphics.pictures, env);
       pages.push({
         page: i,
         rows,
@@ -92,7 +96,17 @@ export async function extractTextPages(
             .replace(/\s+/g, " ")
             .trim(),
         ),
-        blocks: buildBlocks(rows),
+        blocks: buildBlocks(
+          rows,
+          ruledCols,
+          images.map((img, index) => ({
+            yc: img.y + img.height / 2,
+            index,
+            alt: `Image ${index + 1} on page ${i}`,
+          })),
+        ),
+        images,
+        ruledCols,
       });
       page.cleanup();
     }
@@ -100,6 +114,549 @@ export async function extractTextPages(
     await destroy();
   }
   return pages;
+}
+
+function groupRows(items: TextItem[]): TextItem[][] {
+  const sorted = [...items].sort((a, b) => b.y - a.y || a.x - b.x);
+  const rows: TextItem[][] = [];
+  let current: TextItem[] = [],
+    currentY: number | null = null;
+  for (const item of sorted) {
+    if (currentY === null || Math.abs(item.y - currentY) <= 2.5) {
+      current.push(item);
+      currentY ??= item.y;
+    } else {
+      rows.push(current.sort((a, b) => a.x - b.x));
+      current = [item];
+      currentY = item.y;
+    }
+  }
+  if (current.length) rows.push(current.sort((a, b) => a.x - b.x));
+  return rows;
+}
+
+type Gutter = { x0: number; x1: number };
+
+function findGutters(items: TextItem[]): Gutter[] {
+  const minX = Math.min(...items.map((i) => i.x)),
+    maxX = Math.max(...items.map((i) => i.x + i.width)),
+    minY = Math.min(...items.map((i) => i.y)),
+    maxY = Math.max(...items.map((i) => i.y));
+  if (maxX - minX < 200) return [];
+  const bounds: { x: number; d: number }[] = [];
+  for (const item of items) {
+    if (!item.str.trim()) continue;
+    if (item.width > (maxX - minX) * 0.55) continue;
+    bounds.push({ x: item.x, d: 1 }, { x: item.x + item.width, d: -1 });
+  }
+  bounds.sort((a, b) => a.x - b.x || b.d - a.d);
+  const candidates: Gutter[] = [];
+  let depth = 0,
+    gapStart = minX;
+  for (const bound of bounds) {
+    if (depth === 0 && bound.d === 1 && bound.x - gapStart >= 30)
+      candidates.push({ x0: gapStart, x1: bound.x });
+    depth += bound.d;
+    if (depth === 0) gapStart = bound.x;
+  }
+  return candidates.filter((gutter) => {
+    const both: number[] = [];
+    const buckets = new Map<number, { left: boolean; right: boolean }>();
+    for (const item of items) {
+      if (!item.str.trim()) continue;
+      const key = Math.round(item.y / 6);
+      let slot = buckets.get(key);
+      if (!slot) {
+        slot = { left: false, right: false };
+        buckets.set(key, slot);
+      }
+      if (item.x + item.width <= gutter.x0 + 1) slot.left = true;
+      else if (item.x >= gutter.x1 - 1) slot.right = true;
+    }
+    for (const [key, slot] of buckets) if (slot.left && slot.right) both.push(key);
+    if (both.length < 8) return false;
+    return (Math.max(...both) - Math.min(...both)) * 6 >= (maxY - minY) * 0.4;
+  });
+}
+
+function groupColumnRows(items: TextItem[]): TextItem[][] {
+  if (items.length < 8) return groupRows(items);
+  const gutters = findGutters(items);
+  if (!gutters.length) return groupRows(items);
+  const minX = Math.min(...items.map((i) => i.x)),
+    maxX = Math.max(...items.map((i) => i.x + i.width));
+  const crosses = (item: TextItem) =>
+    gutters.some((g) => item.x < g.x0 && item.x + item.width > g.x1) ||
+    item.width > (maxX - minX) * 0.55;
+  const wide = items.filter(crosses),
+    narrow = items.filter((item) => !crosses(item));
+  const bands: TextItem[][][] = [];
+  for (let k = 0; k <= gutters.length; k++) {
+    const x0 = k ? gutters[k - 1].x1 : minX,
+      x1 = k < gutters.length ? gutters[k].x0 : maxX;
+    const inBand = narrow.filter((item) => {
+      const center = item.x + item.width / 2;
+      return center >= x0 - 1 && center <= x1 + 1;
+    });
+    bands.push(groupRows(inBand));
+  }
+  const bandItems = narrow.filter((item) =>
+    bands.some((_, k) => {
+      const x0 = k ? gutters[k - 1].x1 : minX,
+        x1 = k < gutters.length ? gutters[k].x0 : maxX,
+        center = item.x + item.width / 2;
+      return center >= x0 - 1 && center <= x1 + 1;
+    }),
+  );
+  if (!bandItems.length) return groupRows(items);
+  const bandTop = Math.max(...bandItems.map((i) => i.y)),
+    bandBottom = Math.min(...bandItems.map((i) => i.y));
+  const wideRows = groupRows(wide);
+  const rowY = (row: TextItem[]) => row[0].y;
+  const head = wideRows.filter((row) => rowY(row) > bandTop),
+    tail = wideRows.filter((row) => rowY(row) < bandBottom),
+    inside = wideRows.filter((row) => rowY(row) <= bandTop && rowY(row) >= bandBottom);
+  const out: TextItem[][] = [...head];
+  if (!inside.length) {
+    for (const band of bands) out.push(...band);
+    out.push(...tail);
+    return out;
+  }
+  const cuts: { y: number; rows: TextItem[][] }[] = [];
+  for (const row of inside) {
+    const last = cuts[cuts.length - 1];
+    if (last && last.rows[last.rows.length - 1][0].y - rowY(row) <= 40) last.rows.push(row);
+    else cuts.push({ y: rowY(row), rows: [row] });
+  }
+  const chunks = bands.map((band) => {
+    const parts: TextItem[][][] = cuts.map(() => []);
+    const rest: TextItem[][] = [];
+    for (const row of band) {
+      const idx = cuts.findIndex((cut) => rowY(row) <= cut.y);
+      if (idx < 0) parts[0].push(row);
+      else if (rowY(row) > (cuts[idx + 1]?.y ?? -Infinity)) parts[idx].push(row);
+      else rest.push(row);
+    }
+    return { parts, rest };
+  });
+  cuts.forEach((cut, k) => {
+    for (const chunk of chunks) out.push(...chunk.parts[k]);
+    out.push(...cut.rows);
+  });
+  for (const chunk of chunks) out.push(...chunk.rest);
+  out.push(...tail);
+  return out;
+}
+
+type Matrix = [number, number, number, number, number, number];
+type Segment = { x1: number; y1: number; x2: number; y2: number };
+type PictureRef =
+  | { kind: "xobject"; id: string; bbox: [number, number, number, number] }
+  | {
+      kind: "inline";
+      data: { width: number; height: number; kind: number; data: Uint8Array };
+      bbox: [number, number, number, number];
+    };
+
+// Numeric pdf.js operator IDs (stable across pdf.js versions; avoids bundling pdf.js here).
+const OP_SAVE = 10,
+  OP_RESTORE = 11,
+  OP_TRANSFORM = 12,
+  OP_CONSTRUCT = 91,
+  OP_PAINT_IMAGE = 85,
+  OP_PAINT_INLINE = 86;
+const STROKE_PAINTS = new Set([20, 21, 24, 26]);
+const DRAW_MOVE = 0,
+  DRAW_LINE = 1,
+  DRAW_CURVE = 2,
+  DRAW_QUAD = 3,
+  DRAW_CLOSE = 4;
+
+function mulMatrix(m1: Matrix, m2: Matrix): Matrix {
+  const [a1, b1, c1, d1, e1, f1] = m1,
+    [a2, b2, c2, d2, e2, f2] = m2;
+  return [
+    a1 * a2 + c1 * b2,
+    b1 * a2 + d1 * b2,
+    a1 * c2 + c1 * d2,
+    b1 * c2 + d1 * d2,
+    a1 * e2 + c1 * f2 + e1,
+    b1 * e2 + d1 * f2 + f1,
+  ];
+}
+
+function applyMatrix(m: Matrix, x: number, y: number): [number, number] {
+  return [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
+}
+
+function ctmBox(ctm: Matrix): [number, number, number, number] {
+  const corners = [
+    applyMatrix(ctm, 0, 0),
+    applyMatrix(ctm, 1, 0),
+    applyMatrix(ctm, 0, 1),
+    applyMatrix(ctm, 1, 1),
+  ];
+  return [
+    Math.min(...corners.map((c) => c[0])),
+    Math.min(...corners.map((c) => c[1])),
+    Math.max(...corners.map((c) => c[0])),
+    Math.max(...corners.map((c) => c[1])),
+  ];
+}
+
+type OpListPage = {
+  getOperatorList(): Promise<{ fnArray: number[]; argsArray: unknown[][] }>;
+  objs: { get(id: string, callback: (data: unknown) => void): void };
+};
+
+async function collectGraphics(page: {
+  getOperatorList(): Promise<{ fnArray: number[]; argsArray: unknown[][] }>;
+}): Promise<{ segments: Segment[]; pictures: PictureRef[] }> {
+  const segments: Segment[] = [],
+    pictures: PictureRef[] = [];
+  let ops;
+  try {
+    ops = await page.getOperatorList();
+  } catch {
+    return { segments, pictures };
+  }
+  let ctm: Matrix = [1, 0, 0, 1, 0, 0];
+  const stack: Matrix[] = [];
+  const pushAxis = (x1: number, y1: number, x2: number, y2: number) => {
+    if (segments.length >= 8000) return;
+    const [ax, ay] = applyMatrix(ctm, x1, y1),
+      [bx, by] = applyMatrix(ctm, x2, y2),
+      dx = Math.abs(bx - ax),
+      dy = Math.abs(by - ay);
+    if (dx < 1.5 && dy >= 8)
+      segments.push({ x1: ax, y1: Math.min(ay, by), x2: ax, y2: Math.max(ay, by) });
+    else if (dy < 1.5 && dx >= 8)
+      segments.push({ x1: Math.min(ax, bx), y1: ay, x2: Math.max(ax, bx), y2: ay });
+  };
+  for (let i = 0; i < ops.fnArray.length; i++) {
+    const fn = ops.fnArray[i],
+      args = ops.argsArray[i] as unknown[];
+    if (fn === OP_SAVE) {
+      stack.push(ctm);
+      if (stack.length > 64) stack.shift();
+    } else if (fn === OP_RESTORE) {
+      ctm = stack.pop() ?? [1, 0, 0, 1, 0, 0];
+    } else if (fn === OP_TRANSFORM && Array.isArray(args)) {
+      const m = args as number[];
+      ctm = mulMatrix(ctm, [m[0], m[1], m[2], m[3], m[4], m[5]]);
+    } else if (fn === OP_CONSTRUCT && Array.isArray(args) && STROKE_PAINTS.has(Number(args[0]))) {
+      const outer = args[1] as ArrayLike<unknown>;
+      let path: ArrayLike<number> | null = null;
+      if (outer && typeof outer.length === "number") {
+        if (typeof outer[0] === "number") path = outer as ArrayLike<number>;
+        else if (outer.length === 1) {
+          const inner = outer[0] as ArrayLike<number>;
+          if (inner && typeof inner.length === "number" && typeof inner[0] === "number")
+            path = inner;
+        }
+      }
+      if (!path) continue;
+      const draw = Array.from(path);
+      let px = 0,
+        py = 0,
+        sx = 0,
+        sy = 0,
+        pen = false;
+      for (let k = 0; k < draw.length; ) {
+        const op = draw[k++];
+        if (op === DRAW_MOVE) {
+          px = draw[k++];
+          py = draw[k++];
+          sx = px;
+          sy = py;
+          pen = true;
+        } else if (op === DRAW_LINE) {
+          const x = draw[k++],
+            y = draw[k++];
+          if (pen && Number.isFinite(x) && Number.isFinite(y)) pushAxis(px, py, x, y);
+          px = x;
+          py = y;
+        } else if (op === DRAW_CURVE) k += 6;
+        else if (op === DRAW_QUAD) k += 4;
+        else if (op === DRAW_CLOSE) {
+          if (pen) pushAxis(px, py, sx, sy);
+          px = sx;
+          py = sy;
+        } else break;
+      }
+    } else if (fn === OP_PAINT_IMAGE && pictures.length < 25) {
+      const id = String((args as unknown[])[0] ?? "");
+      if (id) pictures.push({ kind: "xobject", id, bbox: ctmBox(ctm) });
+    } else if (fn === OP_PAINT_INLINE && pictures.length < 25) {
+      const raw = (args as unknown[])[0] as {
+        width?: number;
+        height?: number;
+        kind?: number;
+        data?: Uint8Array;
+      };
+      if (
+        raw &&
+        Number.isFinite(raw.width) &&
+        Number.isFinite(raw.height) &&
+        raw.data instanceof Uint8Array
+      )
+        pictures.push({
+          kind: "inline",
+          data: {
+            width: raw.width!,
+            height: raw.height!,
+            kind: raw.kind ?? 2,
+            data: raw.data,
+          },
+          bbox: ctmBox(ctm),
+        });
+    }
+  }
+  return { segments, pictures };
+}
+
+type RuledGrid = { xs: number[]; ys: number[]; x0: number; x1: number; y0: number; y1: number };
+
+function detectRuledGrids(segments: Segment[]): RuledGrid[] {
+  const h = segments.filter((s) => s.y1 === s.y2),
+    v = segments.filter((s) => s.x1 === s.x2);
+  if (h.length < 3 || v.length < 3) return [];
+  const clusterH: { y: number; spans: [number, number][] }[] = [];
+  for (const s of [...h].sort((a, b) => a.y1 - b.y1)) {
+    const last = clusterH[clusterH.length - 1];
+    if (last && Math.abs(s.y1 - last.y) <= 2) last.spans.push([s.x1, s.x2]);
+    else clusterH.push({ y: s.y1, spans: [[s.x1, s.x2]] });
+  }
+  for (const line of clusterH) {
+    line.spans.sort((a, b) => a[0] - b[0]);
+    const merged: [number, number][] = [];
+    for (const span of line.spans) {
+      const m = merged[merged.length - 1];
+      if (m && span[0] <= m[1] + 4) m[1] = Math.max(m[1], span[1]);
+      else merged.push([span[0], span[1]]);
+    }
+    line.spans = merged;
+  }
+  const clusterV: { x: number; spans: [number, number][] }[] = [];
+  for (const s of [...v].sort((a, b) => a.x1 - b.x1)) {
+    const last = clusterV[clusterV.length - 1];
+    if (last && Math.abs(s.x1 - last.x) <= 2) last.spans.push([s.y1, s.y2]);
+    else clusterV.push({ x: s.x1, spans: [[s.y1, s.y2]] });
+  }
+  for (const line of clusterV) {
+    line.spans.sort((a, b) => a[0] - b[0]);
+    const merged: [number, number][] = [];
+    for (const span of line.spans) {
+      const m = merged[merged.length - 1];
+      if (m && span[0] <= m[1] + 4) m[1] = Math.max(m[1], span[1]);
+      else merged.push([span[0], span[1]]);
+    }
+    line.spans = merged;
+  }
+  const overlap = (a: [number, number][], b: [number, number][]) => {
+    const a0 = Math.min(...a.map((s) => s[0])),
+      a1 = Math.max(...a.map((s) => s[1])),
+      b0 = Math.min(...b.map((s) => s[0])),
+      b1 = Math.max(...b.map((s) => s[1]));
+    return (
+      Math.max(0, Math.min(a1, b1) - Math.max(a0, b0)) / Math.max(1, Math.min(a1 - a0, b1 - b0))
+    );
+  };
+  const runs: { y: number; spans: [number, number][] }[][] = [];
+  let run: { y: number; spans: [number, number][] }[] = [];
+  for (const line of clusterH) {
+    const prev = run[run.length - 1];
+    if (!prev || (line.y - prev.y <= 120 && overlap(prev.spans, line.spans) >= 0.6)) run.push(line);
+    else {
+      runs.push(run);
+      run = [line];
+    }
+  }
+  if (run.length) runs.push(run);
+  const grids: RuledGrid[] = [];
+  const attempt = (lines: { y: number; spans: [number, number][] }[], depth: number) => {
+    if (lines.length < 3) return;
+    const ys = lines.map((l) => l.y),
+      y0 = Math.min(...ys),
+      y1 = Math.max(...ys),
+      x0 = Math.min(...lines.flatMap((l) => l.spans.map((s) => s[0]))),
+      x1 = Math.max(...lines.flatMap((l) => l.spans.map((s) => s[1])));
+    const xs = clusterV
+      .filter(
+        (vl) =>
+          vl.x >= x0 - 3 &&
+          vl.x <= x1 + 3 &&
+          vl.spans.some((span) => span[0] <= y0 + 3 && span[1] >= y1 - 3),
+      )
+      .map((vl) => vl.x)
+      .sort((a, b) => a - b);
+    if (xs.length >= 3) {
+      grids.push({ xs, ys: [...ys].sort((a, b) => a - b), x0, x1, y0, y1 });
+      return;
+    }
+    if (depth >= 2 || lines.length < 6) return;
+    const sorted = [...lines].sort((a, b) => a.y - b.y);
+    let cut = 1,
+      widest = 0;
+    for (let k = 1; k < sorted.length; k++) {
+      const gap = sorted[k].y - sorted[k - 1].y;
+      if (gap > widest) {
+        widest = gap;
+        cut = k;
+      }
+    }
+    attempt(sorted.slice(0, cut), depth + 1);
+    attempt(sorted.slice(cut), depth + 1);
+  };
+  for (const candidate of runs) attempt(candidate, 0);
+  return grids;
+}
+
+function ruledColumns(rows: TextItem[][], grids: RuledGrid[]): Map<number, string[]> {
+  const out = new Map<number, string[]>();
+  rows.forEach((row, index) => {
+    const yc = row.reduce((sum, item) => sum + item.y, 0) / row.length;
+    const grid = grids.find((g) => yc >= g.y0 - 6 && yc <= g.y1 + 6);
+    if (!grid) return;
+    const inside = row.filter((item) => {
+      const center = item.x + item.width / 2;
+      return center >= grid.x0 - 2 && center <= grid.x1 + 2;
+    });
+    if (inside.length < row.length * 0.5) return;
+    const cells: string[] = [];
+    for (let c = 0; c + 1 < grid.xs.length; c++) {
+      const lo = grid.xs[c] - (c ? 2 : 6),
+        hi = grid.xs[c + 1] + (c + 2 < grid.xs.length ? 2 : 6);
+      const parts = inside
+        .filter((item) => {
+          const center = item.x + item.width / 2;
+          return center >= lo && center < hi;
+        })
+        .map((item) => item.str);
+      cells.push(parts.join(" ").replace(/\s+/g, " ").trim());
+    }
+    while (cells.length && !cells[cells.length - 1]) cells.pop();
+    if (cells.filter(Boolean).length >= 2) out.set(index, cells);
+  });
+  return out;
+}
+
+function resolveImageObject(
+  objs: OpListPage["objs"],
+  id: string,
+): Promise<{ width: number; height: number; kind: number; data: Uint8Array } | null> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(null), 2000);
+    try {
+      objs.get(id, (data) => {
+        clearTimeout(timer);
+        const raw = data as { width?: number; height?: number; kind?: number; data?: Uint8Array };
+        resolve(
+          raw && Number.isFinite(raw.width) && Number.isFinite(raw.height)
+            ? {
+                width: raw.width!,
+                height: raw.height!,
+                kind: raw.kind ?? 2,
+                data: raw.data as Uint8Array,
+              }
+            : null,
+        );
+      });
+    } catch {
+      clearTimeout(timer);
+      resolve(null);
+    }
+  });
+}
+
+function imageToRgba(image: {
+  width: number;
+  height: number;
+  kind: number;
+  data: Uint8Array;
+}): Uint8ClampedArray | null {
+  const { width, height, kind, data } = image;
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width < 1 || height < 1) return null;
+  if (width * height > 16000000 || width * height < 100) return null;
+  if (!data || !(data instanceof Uint8Array)) return null;
+  if (kind === 3 && data.length === width * height * 4) return new Uint8ClampedArray(data);
+  if (kind === 2 && data.length === width * height * 3) {
+    const out = new Uint8ClampedArray(width * height * 4);
+    for (let i = 0, j = 0; i < data.length; i += 3, j += 4) {
+      out[j] = data[i];
+      out[j + 1] = data[i + 1];
+      out[j + 2] = data[i + 2];
+      out[j + 3] = 255;
+    }
+    return out;
+  }
+  if (kind === 1 && data.length === width * height) {
+    const out = new Uint8ClampedArray(width * height * 4);
+    for (let i = 0, j = 0; i < data.length; i++, j += 4) {
+      out[j] = data[i];
+      out[j + 1] = data[i];
+      out[j + 2] = data[i];
+      out[j + 3] = 255;
+    }
+    return out;
+  }
+  return null;
+}
+
+async function encodeExtractedPng(
+  env: CanvasEnv | undefined,
+  rgba: Uint8ClampedArray,
+  width: number,
+  height: number,
+): Promise<Uint8Array | null> {
+  if (!env) return null;
+  try {
+    const { canvas, ctx } = env.createCanvas(width, height);
+    const context = ctx as {
+      createImageData(w: number, h: number): { data: Uint8ClampedArray };
+      putImageData(frame: { data: Uint8ClampedArray }, x: number, y: number): void;
+    };
+    const frame = context.createImageData(width, height);
+    frame.data.set(rgba);
+    context.putImageData(frame, 0, 0);
+    return await env.toBytes(canvas, "png", 1);
+  } catch {
+    return null;
+  }
+}
+
+async function collectImages(
+  page: OpListPage,
+  pictures: PictureRef[],
+  env?: CanvasEnv,
+): Promise<ExtractedImage[]> {
+  const out: ExtractedImage[] = [],
+    seen = new Set<string>();
+  const encoder = env ?? (typeof window === "undefined" ? undefined : browserEnv());
+  for (const picture of pictures) {
+    const [x0, y0, x1, y1] = picture.bbox,
+      width = x1 - x0,
+      height = y1 - y0;
+    if (!(width >= 1 && height >= 1)) continue;
+    const key = `${Math.round(x0)}:${Math.round(y0)}:${Math.round(width)}:${Math.round(height)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const raw =
+      picture.kind === "inline" ? picture.data : await resolveImageObject(page.objs, picture.id);
+    if (!raw) continue;
+    const rgba = imageToRgba(raw);
+    if (!rgba) continue;
+    out.push({
+      x: x0,
+      y: y0,
+      width,
+      height,
+      pixelWidth: raw.width,
+      pixelHeight: raw.height,
+      png: await encodeExtractedPng(encoder, rgba, raw.width, raw.height),
+    });
+  }
+  return out.sort((a, b) => b.y + b.height / 2 - (a.y + a.height / 2));
 }
 
 export function rowColumns(row: TextItem[]): string[] {
@@ -153,7 +710,13 @@ const BULLET = /^\s*(•|·|▪|◦|○|–|-|−|\*)\s+/;
 const ORDERED = /^\s*(\d{1,3}|[a-zA-Z])\s*[.)]\s+/;
 const TERMINAL = /[.!?…:;\u201d\u2019"'”’)\]]$/;
 
-export function buildBlocks(rows: TextItem[][]): TextBlock[] {
+export type PlacedImage = { yc: number; index: number; alt: string };
+
+export function buildBlocks(
+  rows: TextItem[][],
+  ruled?: Map<number, string[]>,
+  placed?: PlacedImage[],
+): TextBlock[] {
   const median = medianSize(rows);
   type Row = {
     text: string;
@@ -164,18 +727,19 @@ export function buildBlocks(rows: TextItem[][]): TextBlock[] {
     level: 1 | 2 | 3;
     ordered: boolean;
   };
-  const parsed: Row[] = rows.map((row) => {
+  const parsed: Row[] = rows.map((row, rowIndex) => {
     const text = row
       .map((item) => item.str)
       .join(" ")
       .replace(/\s+/g, " ")
       .trim();
-    const cols = rowColumns(row),
+    const cols = ruled?.get(rowIndex) ?? rowColumns(row),
       size = rowSize(row);
     let kind: Row["kind"] = "para",
       level: 1 | 2 | 3 = 3,
       ordered = false;
-    if (cols.length >= 2) kind = "table";
+    if (ruled?.has(rowIndex)) kind = "table";
+    else if (cols.length >= 2) kind = "table";
     else if (text.length >= 2 && text.length <= 140 && size >= median * 1.28) {
       kind = "heading";
       level = size >= median * 1.75 ? 1 : size >= median * 1.45 ? 2 : 3;
@@ -187,8 +751,17 @@ export function buildBlocks(rows: TextItem[][]): TextBlock[] {
   });
   const blocks: TextBlock[] = [];
   let i = 0;
+  const queue = [...(placed ?? [])].sort((a, b) => b.yc - a.yc);
+  let nextImage = 0;
+  const flushImages = (beforeY: number) => {
+    while (nextImage < queue.length && queue[nextImage].yc > beforeY) {
+      const image = queue[nextImage++];
+      blocks.push({ type: "image", index: image.index, alt: image.alt });
+    }
+  };
   const stripMarker = (text: string) => text.replace(BULLET, "").replace(ORDERED, "").trim();
   while (i < parsed.length) {
+    flushImages(rows[i][0]?.y ?? -Infinity);
     const row = parsed[i];
     if (row.kind === "table") {
       const group: Row[] = [row];
@@ -243,6 +816,7 @@ export function buildBlocks(rows: TextItem[][]): TextBlock[] {
     blocks.push({ type: "paragraph", text, runs });
     i = j;
   }
+  flushImages(-Infinity);
   return blocks;
 }
 
@@ -253,8 +827,8 @@ export async function pdfToText(bytes: Uint8Array, signal?: AbortSignal) {
   return pages.map((p) => p.lines.join("\n")).join("\n\n― page break ―\n\n");
 }
 
-export async function pdfToDocx(bytes: Uint8Array, signal?: AbortSignal) {
-  const pages = await extractTextPages(bytes, signal);
+export async function pdfToDocx(bytes: Uint8Array, signal?: AbortSignal, env?: CanvasEnv) {
+  const pages = await extractTextPages(bytes, signal, env);
   if (!pages.some((p) => p.lines.length))
     throw new PdfError("No editable text was found. Run OCR before PDF to Word.", "NO_TEXT");
   const {
@@ -263,6 +837,7 @@ export async function pdfToDocx(bytes: Uint8Array, signal?: AbortSignal) {
     Paragraph,
     TextRun,
     PageBreak,
+    ImageRun,
     HeadingLevel,
     Table,
     TableRow,
@@ -276,7 +851,8 @@ export async function pdfToDocx(bytes: Uint8Array, signal?: AbortSignal) {
   const para = (p: InstanceType<typeof Paragraph>) => children.push(p as never);
   for (let i = 0; i < pages.length; i++) {
     if (i) children.push(new Paragraph({ children: [new PageBreak()] }) as never);
-    const blocks = pages[i].blocks;
+    const blocks = pages[i].blocks,
+      images = pages[i].images;
     if (!blocks.length)
       children.push(
         new Paragraph({
@@ -336,7 +912,28 @@ export async function pdfToDocx(bytes: Uint8Array, signal?: AbortSignal) {
             }),
           ),
         );
-      else if (block.grid.length)
+      else if (block.type === "image") {
+        const image = images[block.index];
+        if (image?.png) {
+          const scale = Math.min(1, 450 / Math.max(1, image.width)),
+            width = Math.max(1, Math.round(image.width * scale * (96 / 72))),
+            height = Math.max(1, Math.round(image.height * scale * (96 / 72)));
+          para(
+            new Paragraph({
+              children: [
+                new ImageRun({ type: "png", data: image.png, transformation: { width, height } }),
+              ],
+            }),
+          );
+        } else
+          para(
+            new Paragraph({
+              children: [
+                new TextRun({ text: `[${block.alt} could not be embedded.]`, italics: true }),
+              ],
+            }),
+          );
+      } else if (block.grid.length)
         children.push(
           new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
@@ -383,9 +980,9 @@ function mdRuns(runs: TextRun[]) {
     .join(" ");
 }
 
-export async function pdfToMarkdown(bytes: Uint8Array, signal?: AbortSignal) {
-  const pages = await extractTextPages(bytes, signal);
-  if (!pages.some((p) => p.blocks.length))
+export async function pdfToMarkdown(bytes: Uint8Array, signal?: AbortSignal, env?: CanvasEnv) {
+  const pages = await extractTextPages(bytes, signal, env);
+  if (!pages.some((p) => p.blocks.some((b) => b.type !== "image")))
     throw new PdfError("No selectable text was found. Use OCR for scanned documents.", "NO_TEXT");
   const out: string[] = [];
   pages.forEach((page, index) => {
@@ -395,7 +992,15 @@ export async function pdfToMarkdown(bytes: Uint8Array, signal?: AbortSignal) {
       else if (block.type === "paragraph") out.push(mdRuns(block.runs));
       else if (block.type === "list")
         out.push(block.items.map((t, i) => `${block.ordered ? `${i + 1}.` : "-"} ${t}`).join("\n"));
-      else if (block.grid.length) {
+      else if (block.type === "image") {
+        const png = page.images[block.index]?.png,
+          alt = block.alt.replace(/[[()\]]/g, "");
+        if (png && png.length <= 300000) {
+          let binary = "";
+          for (let k = 0; k < png.length; k++) binary += String.fromCharCode(png[k]);
+          out.push(`![${alt}](data:image/png;base64,${btoa(binary)})`);
+        } else out.push(`*[Image: ${alt}]*`);
+      } else if (block.grid.length) {
         const cells = block.grid.map((row) => row.map((c) => c.replace(/\|/g, "\\|")));
         const lines = [
           `| ${cells[0].join(" | ")} |`,
@@ -415,6 +1020,7 @@ function blocksToGrid(blocks: TextBlock[]): string[][] {
     if (block.type === "table") grid.push(...block.grid);
     else if (block.type === "list")
       block.items.forEach((item, i) => grid.push([`${block.ordered ? `${i + 1}.` : "•"} ${item}`]));
+    else if (block.type === "image") grid.push([`[Image: ${block.alt}]`]);
     else grid.push([block.text]);
   }
   return grid;
@@ -422,7 +1028,7 @@ function blocksToGrid(blocks: TextBlock[]): string[][] {
 
 export async function pdfToXlsx(bytes: Uint8Array, signal?: AbortSignal) {
   const pages = await extractTextPages(bytes, signal);
-  if (!pages.some((p) => p.blocks.length))
+  if (!pages.some((p) => p.blocks.some((b) => b.type !== "image")))
     throw new PdfError(
       "No selectable text was found. Use OCR before extracting a spreadsheet.",
       "NO_TEXT",
@@ -445,7 +1051,7 @@ export async function pdfToCsv(bytes: Uint8Array, signal?: AbortSignal) {
   const records: string[][] = [["page", "row", "column", "text"]];
   for (const page of pages)
     page.rows.forEach((row, index) => {
-      rowColumns(row).forEach((cell, column) =>
+      (page.ruledCols.get(index) ?? rowColumns(row)).forEach((cell, column) =>
         records.push([String(page.page), String(index + 1), String(column + 1), cell]),
       );
     });
