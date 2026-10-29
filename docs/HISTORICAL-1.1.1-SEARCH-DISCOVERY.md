@@ -1,5 +1,7 @@
 # Search and AI discovery — measured, not guaranteed
 
+> Historical record of the 1.1.1 release (GitHub Pages era, 2026-10-28). The "no hosting migration" statement below was true for 1.1.1; hosting moved to Vercel on 2026-10-30. This file is kept unchanged below for history.
+
 ## Scope
 
 This 1.1.1 release improves the current free project site at https://vikas-93257.github.io/pdforge/ . It does not publish the separate commercial beta, migrate hosting, enable payments or make the repository public.

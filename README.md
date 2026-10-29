@@ -6,7 +6,9 @@ Thirty-five free-to-use PDF tools, local browser processing, English/Hindi OCR, 
 
 ## Search/discovery release
 
-This SEO-only update targets the existing free project site. It adds accurate tool-specific content, guides and public synthetic evidence, without changing the processing engine or publishing the separate commercial beta. See [search-discovery implementation and owner actions](docs/SEARCH-DISCOVERY.md). No top-three rank, indexing or AI recommendation is guaranteed.
+The 1.1.1 search/discovery update is a historical record now: see
+[1.1.1 search-discovery notes](docs/HISTORICAL-1.1.1-SEARCH-DISCOVERY.md). No
+top-three rank, indexing or AI recommendation is guaranteed.
 
 ## Source and website visibility
 
@@ -21,9 +23,13 @@ This SEO-only update targets the existing free project site. It adds accurate to
 
 Private repository: `Vikas-93257/pdforge`.
 
-Configured public Pages target: **https://vikas-93257.github.io/pdforge/**. The current deployment status/URL is authoritative in the repository's Actions / `github-pages` environment; a configured target is not proof a deployment has completed.
+The public site deploys to Vercel from `main` via Vercel's Git integration
+(root path; canonical origin comes from `NEXT_PUBLIC_SITE_URL`). The included
+GitHub workflow runs verification gates only; see [Vercel deployment and
+owner setup](docs/VERCEL.md). A configured target is not proof a deployment
+has completed — confirm in the Vercel dashboard and with real HTTP checks.
 
-The included workflow:
+The gates workflow:
 
 1. Requires the repository to be private.
 2. Installs exact locked dependencies and all three test engines.
@@ -31,11 +37,13 @@ The included workflow:
 4. Tests all tool downloads, errors, privacy behavior and accessibility in Chromium, Firefox and Linux WebKit.
 5. Independently checks outputs using native qpdf/Poppler, Python OOXML validation and OCR.
 6. Gates Lighthouse SEO/accessibility and dependency advisories.
-7. Uploads only the static `out` directory and deploys through official, commit-pinned Pages Actions.
+7. Uploads `reports/` evidence as a workflow artifact; Vercel deploys the static `out` directory separately.
 
-The workflow derives the real canonical URL/project path from Pages configuration. It does not publish a private source URL in the public application. Never put credentials in `NEXT_PUBLIC_*`, committed files or the export.
-
-GitHub accepted Pages configuration for this private repository without purchasing/upgrading a plan. In general, private-repository Pages hosting requires an eligible account plan; if that eligibility changes, use an appropriate host rather than making the source public. See [deployment details](docs/GITHUB-PAGES.md).
+The workflow verifies the canonical production URL from the `PUBLIC_SITE_URL`
+repository variable. It does not publish a private source URL in the public
+application. Never put credentials in `NEXT_PUBLIC_*`, committed files or the
+export. The previous GitHub Pages setup is kept as
+[history](docs/HISTORICAL-GITHUB-PAGES.md).
 
 ## Run locally
 

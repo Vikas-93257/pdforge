@@ -1,5 +1,7 @@
 # Public website from a private source repository
 
+> Historical record: hosting moved from GitHub Pages to Vercel on 2026-10-30. See [docs/VERCEL.md](VERCEL.md) for the current deployment. This file is kept unchanged below for history.
+
 ## Selected policy
 
 The user explicitly selected a **public website, private repository and restricted application reuse**. These are different controls:
