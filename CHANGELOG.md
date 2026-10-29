@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.2.0 — 2026-10-30 (conversion-quality release)
+
+- Added five real tools: PDF to Markdown, PDF to Excel, Excel to PDF, fillable-form
+  filling and extractive PDF summaries. Total is now 35 tools; still 100% local.
+- Rebuilt PDF to Word as a structured exporter: detected headings, real DOCX tables,
+  lists and bold/italic runs instead of flat paragraphs. Complex layouts, charts and
+  original images remain simplified by design.
+- Made Word to PDF text-first by default (searchable, selectable words and tables)
+  with the previous image-based rendering kept as an explicit visual mode.
+- Added a hand-rolled local XLSX reader/writer: per-sheet PDF grids, numeric cells,
+  ISO date display, shared-string workbooks and formula-injection-safe text cells.
+- Published the testing method, dated evidence and limits with the 1.2.0 numbers.
+- No accounts, uploads, paywall, e-sign cloud, AI cloud or repository-visibility
+  changes; original application source stays private/restricted.
+
 ## 1.1.1 — 2026-10-28 (SEO/discovery-only release)
 
 - Corrected the private/restricted application hero badge; upstream open-source attribution retained.

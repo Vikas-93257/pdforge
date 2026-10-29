@@ -366,6 +366,35 @@ export default function ToolSettings({
         </>
       );
       break;
+    case "word-to-pdf":
+      content = (
+        <>
+          {select("Conversion mode", "wordMode", [
+            ["text", "Text-first · searchable, simplified layout"],
+            ["visual", "Visual · page images, closer appearance"],
+          ])}
+          <p className="settings-note">
+            Text mode keeps words selectable and searchable with a simplified layout. Visual mode
+            renders page images that look closer to Word but contain no selectable text.
+          </p>
+        </>
+      );
+      break;
+    case "summarize":
+      content = (
+        <>
+          {select("Summary length", "summaryLength", [
+            ["short", "Short · 3 key sentences"],
+            ["medium", "Medium · 6 key sentences"],
+            ["long", "Detailed · 10 key sentences"],
+          ])}
+          <p className="settings-note">
+            Extractive summarization selects existing sentences by local word frequency. It does not
+            use a cloud AI and does not verify facts.
+          </p>
+        </>
+      );
+      break;
     case "metadata":
       content = (
         <>
@@ -404,14 +433,20 @@ export default function ToolSettings({
                   : slug === "flatten"
                     ? "Filled standard AcroForm fields become static page content. XFA forms are not supported."
                     : slug === "pdf-to-word"
-                      ? "Creates a real editable DOCX from selectable text. Complex layouts, images and tables are not reconstructed."
-                      : slug === "word-to-pdf"
-                        ? "Renders a DOCX into an image-based PDF. Layout may differ from Microsoft Word; text is not selectable."
-                        : slug === "pdf-to-csv"
-                          ? "Exports positional text as page, row, column and text fields. This is a heuristic extraction; review inferred columns."
-                          : slug === "extract-images"
-                            ? "Extracts supported embedded raster images at native dimensions, rather than rendering full pages."
-                            : "Extracts selectable text. For scans, choose the OCR tool first."}
+                      ? "Creates a real editable DOCX with detected headings, simple tables and styling. Complex layouts, images and charts are simplified."
+                      : slug === "pdf-to-markdown"
+                        ? "Converts detected headings, lists and simple tables into Markdown text. Appearance and images are not preserved."
+                        : slug === "pdf-to-excel"
+                          ? "Rebuilds positional text grids into one workbook sheet per page. This is a heuristic extraction; review every number."
+                          : slug === "excel-to-pdf"
+                            ? "Renders each worksheet as a searchable table. Merged cells, charts and custom formats are simplified."
+                            : slug === "fill-pdf-form"
+                              ? "Enter a value for each detected field below. Fields stay editable; use Flatten afterwards to make them static."
+                              : slug === "pdf-to-csv"
+                                ? "Exports positional text as page, row, column and text fields. This is a heuristic extraction; review inferred columns."
+                                : slug === "extract-images"
+                                  ? "Extracts supported embedded raster images at native dimensions, rather than rendering full pages."
+                                  : "Extracts selectable text. For scans, choose the OCR tool first."}
         </p>
       );
   }

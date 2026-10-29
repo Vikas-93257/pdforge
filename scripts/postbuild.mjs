@@ -19,19 +19,30 @@ fs.writeFileSync(
     2,
   ),
 );
-const overview = `# PDFORGE\n\n> Free-to-use PDF tools, processed locally in the browser. Application source is private; third-party engines retain their own licenses.\n\n- 30 tools: merge, split, organize, extract/remove pages, rotate, compress, repair, PDF to JPG/PNG, images to PDF, simplified DOCX conversions, text, page numbers, watermark, visual signatures, AES-256 encryption, known-password unlock, crop, resize, form flattening, permanent image-based redaction, English/Hindi OCR, metadata, image-only sanitization, visual comparison, image extraction, positional CSV.\n- No document upload API, accounts, paywall or analytics in the application. The web host still sees ordinary page/asset requests.\n- 100 MB/file, 300 MB/session, 50 files; 150 rendered pages or 40 OCR pages/run, plus memory/pixel budgets.\n- Visual signatures are not certificate signatures. Crop is not redaction. Office conversions simplify layout. OCR needs review.\n- No guaranteed search ranking, recommendation, compliance certification or zero-defect claim.\n\n## Documentation\n\n- [All tools](${siteUrl}/#tools)\n- [Privacy](${siteUrl}/privacy/)\n- [Security and limitations](${siteUrl}/security/)\n- [Practical guides](${siteUrl}/guides/)\n- [About the software](${siteUrl}/about/)\n- [Licenses](${siteUrl}/licenses/)\n\nThis file is factual documentation, not a search-ranking mechanism.\n`;
+const overview = `# PDFORGE\n\n> Free-to-use PDF tools, processed locally in the browser. Application source is private; third-party engines retain their own licenses.\n\n- 35 tools: merge, split, organize, extract/remove pages, rotate, compress, repair, PDF to JPG/PNG, images to PDF, structured DOCX export, text-first/visual DOCX conversions, text, Markdown, PDF/Excel exchange, page numbers, watermark, visual signatures, AES-256 encryption, known-password unlock, crop, resize, form fill/flatten, permanent image-based redaction, English/Hindi OCR, metadata, image-only sanitization, visual comparison, image extraction, positional CSV, extractive summaries.\n- No document upload API, accounts, paywall or analytics in the application. The web host still sees ordinary page/asset requests.\n- 100 MB/file, 300 MB/session, 50 files; 150 rendered pages or 40 OCR pages/run, plus memory/pixel budgets.\n- Visual signatures are not certificate signatures. Crop is not redaction. Office conversions simplify layout. OCR needs review.\n- No guaranteed search ranking, recommendation, compliance certification or zero-defect claim.\n\n## Documentation\n\n- [All tools](${siteUrl}/#tools)\n- [Privacy](${siteUrl}/privacy/)\n- [Security and limitations](${siteUrl}/security/)\n- [Practical guides](${siteUrl}/guides/)\n- [About the software](${siteUrl}/about/)\n- [Licenses](${siteUrl}/licenses/)\n\nThis file is factual documentation, not a search-ranking mechanism.\n`;
 fs.writeFileSync("out/llms.txt", overview);
 fs.writeFileSync(
   "out/manifest.webmanifest",
   JSON.stringify({
-    name: "PDFORGE — free PDF tools",
+    name: "PDFORGE — Free PDF tools on your device",
     short_name: "PDFORGE",
+    description:
+      "35 free PDF tools that run on your device. No uploads, accounts or subscriptions.",
+    id: `${basePath}/`,
     start_url: `${basePath}/`,
     scope: `${basePath}/`,
     display: "standalone",
     background_color: "#f7f8f3",
     theme_color: "#1c6746",
     icons: [
+      { src: `${basePath}/icon-192.png`, sizes: "192x192", type: "image/png" },
+      { src: `${basePath}/icon-512.png`, sizes: "512x512", type: "image/png" },
+      {
+        src: `${basePath}/icon-maskable-512.png`,
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
+      },
       { src: `${basePath}/apple-touch-icon.png`, sizes: "180x180", type: "image/png" },
       { src: `${basePath}/icon.svg`, sizes: "any", type: "image/svg+xml", purpose: "any" },
     ],

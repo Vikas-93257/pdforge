@@ -26,6 +26,11 @@ import {
   Columns2,
   Images,
   Table2,
+  FileCode2,
+  Sheet,
+  FileSpreadsheet,
+  FormInput,
+  ScrollText,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 export const TOOL_ICONS: Record<string, LucideIcon> = {
@@ -57,6 +62,11 @@ export const TOOL_ICONS: Record<string, LucideIcon> = {
   columns: Columns2,
   images: Images,
   table: Table2,
+  "file-code": FileCode2,
+  sheet: Sheet,
+  "file-sheet": FileSpreadsheet,
+  form: FormInput,
+  summary: ScrollText,
 };
 export function ToolIcon({
   name,

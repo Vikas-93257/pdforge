@@ -1,6 +1,10 @@
 import {
+  PDFCheckBox,
   PDFDocument,
+  PDFDropdown,
   PDFName,
+  PDFRadioGroup,
+  PDFTextField,
   degrees,
   rgb,
   type PDFPage,
@@ -425,6 +429,117 @@ export async function flattenPdf(bytes: Uint8Array) {
     );
   form.flatten();
   return d.save();
+}
+
+export type FormFieldInfo = {
+  name: string;
+  type: "text" | "checkbox" | "choice";
+  value: string;
+  options: string[];
+  readOnly: boolean;
+};
+
+export async function listFormFields(bytes: Uint8Array): Promise<FormFieldInfo[]> {
+  const d = await loadPdf(bytes),
+    form = d.getForm();
+  if (form.hasXFA())
+    throw new PdfError(
+      "XFA forms are not supported. Export a standard PDF from the original application first.",
+      "UNSUPPORTED",
+    );
+  const fields = form.getFields();
+  if (fields.length > 2000)
+    throw new PdfError("This form has too many fields to fill in one run.", "LIMIT");
+  return fields.map((field) => {
+    const name = field.getName(),
+      readOnly = field.isReadOnly();
+    if (field instanceof PDFTextField) {
+      return { name, type: "text", value: field.getText() ?? "", options: [], readOnly };
+    }
+    if (field instanceof PDFCheckBox) {
+      return {
+        name,
+        type: "checkbox",
+        value: field.isChecked() ? "true" : "false",
+        options: [],
+        readOnly,
+      };
+    }
+    if (field instanceof PDFDropdown) {
+      return {
+        name,
+        type: "choice",
+        value: (field.getSelected() ?? []).join(", "),
+        options: field.getOptions(),
+        readOnly,
+      };
+    }
+    if (field instanceof PDFRadioGroup) {
+      return {
+        name,
+        type: "choice",
+        value: field.getSelected() ?? "",
+        options: field.getOptions(),
+        readOnly,
+      };
+    }
+    return { name, type: "text", value: "", options: [], readOnly: true };
+  });
+}
+
+export async function fillFormFields(bytes: Uint8Array, values: Record<string, string>) {
+  const d = await loadPdf(bytes),
+    form = d.getForm();
+  if (form.hasXFA())
+    throw new PdfError(
+      "XFA forms are not supported. Export a standard PDF from the original application first.",
+      "UNSUPPORTED",
+    );
+  const filled: string[] = [],
+    skipped: string[] = [];
+  for (const field of form.getFields()) {
+    const name = field.getName();
+    if (!(name in values)) continue;
+    const raw = values[name] ?? "";
+    if (raw.length > 10000) {
+      skipped.push(name);
+      continue;
+    }
+    try {
+      if (field.isReadOnly()) {
+        skipped.push(name);
+        continue;
+      }
+      if (field instanceof PDFTextField) {
+        const max = field.getMaxLength();
+        field.setText(max !== undefined ? raw.slice(0, max) : raw);
+        filled.push(name);
+      } else if (field instanceof PDFCheckBox) {
+        if (/^(true|1|yes|on|checked)$/i.test(raw.trim())) field.check();
+        else field.uncheck();
+        filled.push(name);
+      } else if (field instanceof PDFDropdown || field instanceof PDFRadioGroup) {
+        if (field.getOptions().includes(raw)) {
+          field.select(raw);
+          filled.push(name);
+        } else skipped.push(name);
+      } else skipped.push(name);
+    } catch {
+      skipped.push(name);
+    }
+  }
+  if (!filled.length)
+    throw new PdfError(
+      "No fillable fields were updated. Check the field names and values.",
+      "NO_FIELDS",
+    );
+  try {
+    const { StandardFonts } = await import("pdf-lib");
+    form.updateFieldAppearances(await d.embedFont(StandardFonts.Helvetica));
+  } catch {
+    // Appearances are a rendering hint; values are already stored.
+  }
+  return { bytes: await d.save(), filled, skipped };
 }
 export type MetadataInput = {
   title: string;

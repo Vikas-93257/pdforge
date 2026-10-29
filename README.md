@@ -1,8 +1,8 @@
-# PDFORGE 1.1.1 — private-source PDF tools
+# PDFORGE 1.2.0 — private-source PDF tools
 
 **Your PDFs. Your device. Your rules.**
 
-Thirty free-to-use PDF tools, local browser processing, English/Hindi OCR, real AES-256 protection, image-based permanent redaction and a responsive interface. No account, document upload API, database, paid conversion service or added PDFORGE watermark.
+Thirty-five free-to-use PDF tools, local browser processing, English/Hindi OCR, real AES-256 protection, image-based permanent redaction, structured Office conversions and a responsive interface. No account, document upload API, database, paid conversion service or added PDFORGE watermark.
 
 ## Search/discovery release
 
@@ -29,7 +29,7 @@ The included workflow:
 2. Installs exact locked dependencies and all three test engines.
 3. Checks formatting, lint, fresh route types, unit tests and the production export.
 4. Tests all tool downloads, errors, privacy behavior and accessibility in Chromium, Firefox and Linux WebKit.
-5. Independently checks outputs using native qpdf/Poppler and OCR.
+5. Independently checks outputs using native qpdf/Poppler, Python OOXML validation and OCR.
 6. Gates Lighthouse SEO/accessibility and dependency advisories.
 7. Uploads only the static `out` directory and deploys through official, commit-pinned Pages Actions.
 

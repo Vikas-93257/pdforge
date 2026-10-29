@@ -202,15 +202,15 @@ export const DISCOVERY: Record<string, DiscoveryEntry> = {
     ],
   },
   "pdf-to-word": {
-    title: "PDF to Word Converter — Free DOCX, No Upload",
+    title: "PDF to Word Converter — Free Structured DOCX, No Upload",
     description:
-      "Convert selectable PDF text to a real editable Word DOCX in your browser, free and without uploads. Scans need OCR; complex layouts and tables are simplified.",
+      "Convert selectable PDF text to a structured Word DOCX in your browser. Headings and simple tables are detected; complex layouts and images are simplified.",
     usefulFor:
-      "Recover editable paragraphs from a text-based PDF when document confidentiality matters more than matching every layout detail. The output is genuine DOCX, not a renamed PDF or a page-image slideshow.",
+      "Recover editable paragraphs from a text-based PDF when document confidentiality matters more than matching every layout detail. The output is genuine DOCX with detected headings, simple tables and styling, not a renamed PDF or a page-image slideshow.",
     produces:
-      "Editable text and page boundaries in a Word-compatible OOXML .docx file. The public synthetic before/after sample below demonstrates a simple text case; it does not prove complex-layout fidelity.",
+      "A structured Word-compatible OOXML .docx file with headings, simple text tables, lists and bold/italic runs. The public synthetic before/after sample below demonstrates a simple text case; it does not prove complex-layout fidelity.",
     watchFor:
-      "Tables, charts, original images and arbitrary typography are not reconstructed by this text-focused exporter. A scanned or textless PDF needs OCR first. Password-encrypted input needs an opening/owner password you already know; this is not password recovery.",
+      "Simple text tables are detected but complex layouts can shift: charts, original images and fonts are not reconstructed, multi-column reading order can be wrong, and a scanned or textless PDF needs OCR first. Password-encrypted input needs an opening/owner password you already know; this is not password recovery.",
     guide: {
       slug: "pdf-to-word-without-upload",
       label: "PDF to Word without uploading: what stays editable?",
@@ -234,13 +234,13 @@ export const DISCOVERY: Record<string, DiscoveryEntry> = {
     ],
   },
   "word-to-pdf": {
-    title: "Word to PDF Converter — Free, On Your Device",
+    title: "Word to PDF Converter — Free Text & Visual Modes",
     description:
-      "Render supported DOCX content into PDF pages locally without uploading the Word file. This release uses image-based output and simplifies complex Office layout.",
+      "Convert DOCX to a searchable text-first PDF locally, or choose image-based visual mode. Complex Office layouts are simplified; no uploads, free.",
     usefulFor:
-      "Create a shareable visual PDF from supported .docx paragraphs, lists, tables and embedded images without sending the document to a conversion API.",
+      "Create a shareable searchable PDF from supported .docx paragraphs, lists, tables and embedded PNG/JPEG images without sending the document to a conversion API. Switch to visual mode when appearance matters more than selectable text.",
     produces:
-      "Image-based PDF pages in the currently published 1.1 converter. This is not native Microsoft Word rendering or an editable/vector PDF export.",
+      "Searchable text-first PDF pages by default, with simplified layout. Image-based visual mode is available when appearance matters more than selectable text. Neither mode is native Microsoft Word rendering.",
     watchFor:
       "Legacy .doc and macro-enabled documents are not supported. Headers, footers, floating objects, fonts and complex layouts can differ. Compare the complete result with the original before sharing.",
     next: [
@@ -530,6 +530,116 @@ export const DISCOVERY: Record<string, DiscoveryEntry> = {
         slug: "ocr",
         label: "Recognize scans first",
         reason: "Create selectable text before attempting position-based CSV extraction.",
+      },
+    ],
+  },
+  "pdf-to-markdown": {
+    title: "PDF to Markdown Converter — Free, No Upload",
+    description:
+      "Turn selectable PDF text into clean Markdown with headings, lists and tables. Runs locally in your browser; scans need OCR first.",
+    usefulFor:
+      "Prepare readable plain-text notes, documentation or LLM-ready input from a text-based PDF. Headings, lists and simple text grids become Markdown structure without sending the document anywhere.",
+    produces:
+      "A UTF-8 Markdown file with detected headings, bullet/numbered lists and pipe tables, separated by page markers.",
+    watchFor:
+      "Markdown keeps structure, not appearance: fonts, colors, images and exact layout are not preserved. Multi-column reading order can be wrong; scans need OCR first.",
+    next: [
+      {
+        slug: "pdf-to-text",
+        label: "Extract plain text",
+        reason: "Choose unformatted text when Markdown structure is unnecessary.",
+      },
+      {
+        slug: "summarize",
+        label: "Summarize key sentences",
+        reason: "Select the most representative sentences instead of converting everything.",
+      },
+    ],
+  },
+  "pdf-to-excel": {
+    title: "PDF to Excel Converter — Free XLSX, No Upload",
+    description:
+      "Rebuild selectable PDF text grids as a genuine editable XLSX workbook locally. One sheet per page; review numbers before relying on them.",
+    usefulFor:
+      "Recover usable spreadsheet rows from a text-based PDF price list, report or statement. Each PDF page becomes a workbook sheet with positionally inferred columns.",
+    produces:
+      "A genuine OOXML .xlsx workbook with one sheet per PDF page. Numeric cells stay numeric; text uses shared strings so values can never execute as formulas.",
+    watchFor:
+      "This is positional grid reconstruction, not verified accounting data: merged cells, wrapped text and multi-column layouts can misalign columns. Review every number; scans need OCR first.",
+    next: [
+      {
+        slug: "pdf-to-csv",
+        label: "Export positional CSV",
+        reason: "Choose a simpler text format when a workbook container is unnecessary.",
+      },
+      {
+        slug: "ocr",
+        label: "Recognize scans first",
+        reason: "Create selectable text before attempting position-based extraction.",
+      },
+    ],
+  },
+  "excel-to-pdf": {
+    title: "Excel to PDF Converter — Free, On Your Device",
+    description:
+      "Render an XLSX workbook into searchable PDF tables locally. Simplified styling; charts, images and macros are not supported.",
+    usefulFor:
+      "Create a shareable searchable PDF from an .xlsx workbook's worksheets without sending business data to a conversion API. Each sheet becomes titled tables in reading order.",
+    produces:
+      "Searchable PDF pages with one table section per worksheet, using stored cell values with simplified borders and styling.",
+    watchFor:
+      "XLSX only; legacy .xls and macro-enabled files are rejected. Merged cells, charts, images, print areas and custom number formats are simplified; dates use stored serial values.",
+    next: [
+      {
+        slug: "pdf-to-excel",
+        label: "Convert PDF tables to Excel",
+        reason: "Rebuild workbook data from a text-based PDF in the other direction.",
+      },
+    ],
+  },
+  "fill-pdf-form": {
+    title: "Fill PDF Form — Free, Private Form Filler",
+    description:
+      "Type values into a PDF's fillable AcroForm fields entirely on your device. Fields stay editable; flatten afterwards to lock them.",
+    usefulFor:
+      "Complete a fillable application, declaration or feedback PDF when the fields already exist. Text, checkbox and choice fields are listed with their current values for editing.",
+    produces:
+      "A PDF copy with the entered field values stored as real form data, with updated field appearances. The original file is not modified.",
+    watchFor:
+      "Only standard AcroForm fields are supported; XFA forms, flat scans and image-only pages have nothing to fill. Filled values stay editable until flattened; filling is not identity verification.",
+    next: [
+      {
+        slug: "flatten",
+        label: "Flatten filled forms",
+        reason: "Make the entered values static page content after reviewing them.",
+      },
+      {
+        slug: "sign",
+        label: "Add a visual signature",
+        reason: "Place a drawn or typed signature image after completing the fields.",
+      },
+    ],
+  },
+  summarize: {
+    title: "Summarize PDF — Free Extractive Summary, No Upload",
+    description:
+      "Select a PDF's key sentences locally by word frequency. Honest extractive summarization with no cloud AI and no uploads.",
+    usefulFor:
+      "Get the gist of a long text-based report, article or policy document. The most representative existing sentences are selected on your device in three length options.",
+    produces:
+      "A UTF-8 text summary containing the selected key sentences in original order, plus a count of sentences considered.",
+    watchFor:
+      "Extractive selection is not comprehension: important nuance can be missed and nothing is fact-checked. Summaries reflect word frequency, not truth; scans need OCR first.",
+    next: [
+      {
+        slug: "pdf-to-text",
+        label: "Extract full text",
+        reason: "Read everything when a frequency-based selection is not enough.",
+      },
+      {
+        slug: "pdf-to-markdown",
+        label: "Convert to Markdown",
+        reason: "Keep full structured content for notes instead of a short summary.",
       },
     ],
   },

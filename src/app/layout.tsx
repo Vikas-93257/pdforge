@@ -3,13 +3,14 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowUpRight, ShieldCheck, Code2 } from "lucide-react";
 import { Brand } from "@/components/Brand";
+import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { SITE_URL, absolute, assetUrl, safeJson } from "@/lib/site";
 import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: "PDFORGE — Free PDF tools. No uploads. No sign-up.", template: "%s | PDFORGE" },
   description:
-    "30 free PDF tools that run on your device. Merge, split, compress, convert, sign and protect PDFs in your browser. No uploads, accounts or subscriptions.",
+    "35 free PDF tools that run on your device. Merge, split, compress, convert, sign and protect PDFs in your browser. No uploads, accounts or subscriptions.",
   applicationName: "PDFORGE",
   category: "productivity",
   robots: {
@@ -49,7 +50,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "PDFORGE — Free, private PDF tools",
-    description: "30 tools. No uploads. No accounts. Built for your browser.",
+    description: "35 tools. No uploads. No accounts. Built for your browser.",
     images: [absolute("og.png")],
   },
   icons: {
@@ -191,6 +192,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </span>
           </div>
         </footer>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

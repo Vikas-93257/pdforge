@@ -32,15 +32,20 @@ test("discovery workflows and guides point only to actual supported routes", () 
       );
   }
 });
-test("PDF-to-Word discovery copy does not promise original images/tables/full fidelity", () => {
+test("PDF-to-Word discovery copy does not promise original images/charts/full fidelity", () => {
   const d = DISCOVERY["pdf-to-word"];
   assert.match(d.watchFor, /not reconstructed/);
   assert.match(d.watchFor, /OCR/);
-  assert.match(d.description!, /complex layouts and tables are simplified/);
+  assert.match(d.description!, /complex layouts and images are simplified/);
+  assert.match(d.produces, /simple text tables/);
+  assert.doesNotMatch(d.produces, /exact layout|pixel-perfect|charts are rebuilt/);
 });
-test("published Word conversion copy stays honest about the unchanged 1.1 rendering engine", () => {
-  assert.match(DISCOVERY["word-to-pdf"].produces, /Image-based/);
-  assert.match(DISCOVERY["word-to-pdf"].watchFor, /complex layouts can differ/);
+test("published Word conversion copy explains text-first default and visual option", () => {
+  const d = DISCOVERY["word-to-pdf"];
+  assert.match(d.produces, /text-first/);
+  assert.match(d.produces, /Image-based/);
+  assert.match(d.watchFor, /complex layouts can differ/);
+  assert.match(d.description!, /searchable/);
 });
 test("public sample is real selectable PDF and actual editable OOXML DOCX", async () => {
   const pdf = new Uint8Array(fs.readFileSync("public/examples/pdf-to-word/sample-input.pdf"));

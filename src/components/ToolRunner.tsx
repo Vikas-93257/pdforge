@@ -33,6 +33,7 @@ import {
 import { fmtBytes } from "@/lib/site";
 import ToolSettings from "./ToolSettings";
 import RedactionEditor from "./RedactionEditor";
+import FormFiller from "./FormFiller";
 type Thumb = { page: number; dataUrl: string; rotation: number };
 type Completed = ToolResult & {
   links: { url: string; name: string; mime: string; size: number }[];
@@ -43,6 +44,7 @@ function defaults(slug: string): ToolOptions {
     order: [],
     rotations: {},
     boxes: [],
+    fieldValues: {},
     ranges: slug === "pdf-to-jpg" || slug === "pdf-to-png" ? "" : "1",
     fontSize: slug === "watermark" ? 48 : slug === "text-to-pdf" ? 12 : 11,
   };
@@ -79,6 +81,11 @@ export default function ToolRunner({ tool }: { tool: ToolDef }) {
   );
   const onBoxes = useCallback(
     (boxes: ToolOptions["boxes"]) => setOptions((previous) => ({ ...previous, boxes })),
+    [],
+  );
+  const onFieldValues = useCallback(
+    (fieldValues: ToolOptions["fieldValues"]) =>
+      setOptions((previous) => ({ ...previous, fieldValues })),
     [],
   );
   const clearResults = useCallback(() => {
@@ -325,9 +332,11 @@ export default function ToolRunner({ tool }: { tool: ToolDef }) {
                 ? "JPG, PNG or WebP"
                 : tool.accept === "document"
                   ? "DOCX"
-                  : tool.accept === "text"
-                    ? "UTF-8 TXT"
-                    : "PDF, JPG, PNG or WebP"}{" "}
+                  : tool.accept === "spreadsheet"
+                    ? "XLSX spreadsheet"
+                    : tool.accept === "text"
+                      ? "UTF-8 TXT"
+                      : "PDF, JPG, PNG or WebP"}{" "}
             · Max 100 MB per file{tool.multiple ? " · 300 MB total" : ""}
           </span>
         </div>
@@ -474,6 +483,15 @@ export default function ToolRunner({ tool }: { tool: ToolDef }) {
             pageCount={pageCount}
             boxes={o.boxes}
             onChange={onBoxes}
+            disabled={disabled}
+          />
+        )}
+        {tool.slug === "fill-pdf-form" && files.length > 0 && (
+          <FormFiller
+            key={files[0].id}
+            bytes={files[0].bytes}
+            values={o.fieldValues}
+            onChange={onFieldValues}
             disabled={disabled}
           />
         )}

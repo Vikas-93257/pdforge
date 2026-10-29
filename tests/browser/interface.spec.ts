@@ -27,10 +27,10 @@ async function resultBytes(page: Page) {
 }
 test("home search, filters and actual client-side navigation", async ({ page }) => {
   await page.goto("");
-  await expect(page.locator(".tool-grid .tool-card")).toHaveCount(30);
+  await expect(page.locator(".tool-grid .tool-card")).toHaveCount(35);
   await page.getByRole("button", { name: "Secure", exact: true }).click();
   await expect(page.locator(".tool-grid .tool-card")).toHaveCount(4);
-  await page.getByRole("button", { name: /All tools 30/ }).click();
+  await page.getByRole("button", { name: /All tools 35/ }).click();
   await page.getByRole("searchbox", { name: "Search PDF tools" }).fill("compress");
   await expect(page.locator(".tool-grid .tool-card")).toHaveCount(1);
   await page.locator(".tool-grid .tool-card").click();
@@ -39,10 +39,13 @@ test("home search, filters and actual client-side navigation", async ({ page }) 
 });
 test("search has a keyboard-accessible no-results recovery", async ({ page }) => {
   await page.goto("");
+  // Wait for client hydration before typing: filling pre-hydration sets the DOM
+  // value without reaching React state, which flakes on slower engines.
+  await expect(page.locator(".tool-grid .tool-card")).toHaveCount(35);
   await page.getByRole("searchbox").fill("does-not-exist-731");
   await expect(page.getByRole("heading", { name: /No tools found/ })).toBeVisible();
   await page.getByRole("button", { name: "Show all tools" }).click();
-  await expect(page.locator(".tool-grid .tool-card")).toHaveCount(30);
+  await expect(page.locator(".tool-grid .tool-card")).toHaveCount(35);
 });
 for (const width of [320, 390, 768, 1440])
   test(`no horizontal overflow at ${width}px`, async ({ page }) => {
@@ -76,6 +79,9 @@ for (const [route, name] of [
 ])
   test(`axe WCAG A/AA: ${name}`, async ({ page }, info) => {
     await page.goto(route);
+    // Let hydration and fonts settle before scanning: mid-render DOM flakes
+    // automated checks on slower engines without indicating a real violation.
+    await page.waitForLoadState("networkidle");
     const result = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
       .analyze();
@@ -213,14 +219,15 @@ for (const [name, slug, input, configure, pattern] of negative)
     await expect(page.locator(".result-panel")).toHaveCount(0);
   });
 test("cancellation leaves no partial or fake completed result", async ({ page }) => {
-  // Hold the real engine download so a tiny PDF cannot finish before WebKit's
-  // actionability checks reach the cancel button. This tests cancellation,
-  // not a race against the speed of the test machine.
+  // Hold the page-initiated worker script (not the worker-initiated WASM) so a tiny
+  // PDF cannot finish before WebKit's actionability checks reach the cancel button.
+  // Worker-initiated requests are not routable on WebKit; the cancellation path
+  // under test is identical either way.
   let release: () => void = () => {};
   const engineDownload = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await page.context().route("**/engines/qpdf/qpdf.wasm", async (route) => {
+  await page.context().route("**/engines/qpdf/runner.js", async (route) => {
     await engineDownload;
     await route.continue().catch(() => {});
   });
@@ -377,8 +384,10 @@ test("client navigation does not carry a selected document into another tool or 
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Merge PDF");
   await expect(page.locator(".file-row")).toHaveCount(0);
 });
-test("missing OCR core fails promptly and disposes every local worker", async ({ page }) => {
-  await page.route("**/tesseract-core-*.wasm.js", (route) =>
+test("missing OCR engine fails promptly and disposes every local worker", async ({ page }) => {
+  // Block the page-initiated worker script: worker-initiated core/language downloads
+  // are not routable on WebKit, while the missing-engine failure path is the same.
+  await page.route("**/engines/ocr/worker.min.js", (route) =>
     route.fulfill({ status: 404, body: "Missing test asset", contentType: "text/plain" }),
   );
   await choose(page, "ocr", "scanned.pdf");
@@ -418,4 +427,22 @@ test("public site discloses restricted application licensing without linking pri
   await expect(page.locator(".article-content")).toContainText(
     "their permissions are not restricted",
   );
+});
+test("PWA manifest, icons and service worker are served", async ({ request }) => {
+  const manifest = await request.get("manifest.webmanifest");
+  expect(manifest.status()).toBe(200);
+  const data = await manifest.json();
+  expect(data.name).toContain("PDFORGE");
+  expect(data.icons.some((i: { sizes: string }) => i.sizes === "512x512")).toBe(true);
+  expect(data.icons.some((i: { purpose?: string }) => (i.purpose || "").includes("maskable"))).toBe(
+    true,
+  );
+  for (const icon of ["icon-192.png", "icon-512.png", "icon-maskable-512.png"]) {
+    const res = await request.get(icon);
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("image/png");
+  }
+  const sw = await request.get("sw.js");
+  expect(sw.status()).toBe(200);
+  expect((await sw.text()).includes("addEventListener")).toBe(true);
 });

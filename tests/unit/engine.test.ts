@@ -494,9 +494,9 @@ test("DOCX preflight rejects declared ZIP bombs without decompressing", async ()
     }
   assert.throws(() => convert.inspectDocxZip(b), /safe 150 MB/);
 });
-test("catalog contains exactly 30 unique implemented tools", () => {
-  assert.equal(TOOLS.length, 30);
-  assert.equal(new Set(TOOLS.map((t) => t.slug)).size, 30);
+test("catalog contains exactly 35 unique implemented tools", () => {
+  assert.equal(TOOLS.length, 35);
+  assert.equal(new Set(TOOLS.map((t) => t.slug)).size, 35);
   for (const t of TOOLS) {
     assert.ok(t.steps.length >= 3);
     assert.ok(t.limitation.length > 20);
@@ -592,4 +592,198 @@ test("Unicode opening passwords round-trip without corruption", async () => {
     encrypted = await secure.protectPdf(bytes, password),
     unlocked = await secure.unlockPdf(encrypted, password);
   assert.match(await text(unlocked), /SENSITIVE ACCOUNT 314159/);
+});
+test("structured extraction detects headings, tables and font styles", async () => {
+  const pages = await convert.extractTextPages(await file("three-pages.pdf")),
+    blocks = pages[0].blocks;
+  assert.deepEqual(
+    blocks.map((b) => b.type),
+    ["heading", "paragraph", "table", "paragraph", "paragraph"],
+  );
+  const heading = blocks[0];
+  assert.equal(heading.type === "heading" && heading.text, "ALPHA PAGE ONE");
+  const table = blocks[2];
+  assert.ok(table.type === "table");
+  if (table.type === "table")
+    assert.deepEqual(table.grid, [
+      ["Item", "Amount"],
+      ["Notebook", "1250"],
+    ]);
+  assert.ok(pages[0].rows.flat().every((item) => item.size > 0 && typeof item.bold === "boolean"));
+});
+test("PDF-to-DOCX writes detected headings and real tables", async () => {
+  const out = await convert.pdfToDocx(await file("three-pages.pdf")),
+    zip = await JSZip.loadAsync(out),
+    xml = await zip.file("word/document.xml")!.async("string");
+  assert.match(xml, /ALPHA PAGE ONE/);
+  assert.match(xml, /w:pStyle[^>]*Heading1/);
+  assert.match(xml, /<w:tbl[\s>]/);
+  assert.match(xml, /Notebook/);
+  assert.ok(!xml.includes("w:drawing"));
+});
+test("PDF-to-Markdown keeps headings, lists and pipe tables", async () => {
+  const md = await convert.pdfToMarkdown(await file("three-pages.pdf"));
+  assert.match(md, /^# ALPHA PAGE ONE/m);
+  assert.match(md, /\| Item \| Amount \|/);
+  assert.match(md, /\| --- \| --- \|/);
+  assert.match(md, /^---$/m);
+  await assert.rejects(convert.pdfToMarkdown(await file("scanned.pdf")), /Use OCR/);
+});
+test("PDF-to-XLSX writes a genuine workbook with numeric cells", async () => {
+  const out = await convert.pdfToXlsx(await file("three-pages.pdf"));
+  assert.equal(out.sheets, 3);
+  assert.equal(out.truncated, false);
+  const zip = await JSZip.loadAsync(out.bytes);
+  assert.ok(zip.file("xl/workbook.xml"));
+  assert.ok(zip.file("xl/worksheets/sheet3.xml"));
+  const sheet = await zip.file("xl/worksheets/sheet1.xml")!.async("string");
+  assert.match(sheet, /<c r="B4"><v>1250<\/v><\/c>/);
+  assert.ok(!sheet.includes("<f>"));
+  const reread = await (await import("../../src/lib/pdf/xlsx")).readXlsx(out.bytes);
+  assert.equal(reread.sheets.length, 3);
+  assert.ok(reread.sheets[0].grid.flat().join(" ").includes("Notebook"));
+});
+test("XLSX writer truncates beyond the cell budget instead of failing", async () => {
+  const { buildXlsx } = await import("../../src/lib/pdf/xlsx");
+  const grid = Array.from({ length: 2600 }, () => Array.from({ length: 100 }, () => "x"));
+  const out = await buildXlsx([{ name: "big", grid }]);
+  assert.equal(out.truncated, true);
+  assert.ok(out.bytes.length > 1000);
+});
+test("XLSX reader returns exact grids from the synthetic workbook", async () => {
+  const { readXlsx } = await import("../../src/lib/pdf/xlsx");
+  const data = await readXlsx(await file("sample.xlsx"));
+  assert.deepEqual(
+    data.sheets.map((s) => s.name),
+    ["Items", "Notes"],
+  );
+  assert.deepEqual(data.sheets[0].grid, [
+    ["Item", "Amount"],
+    ["Notebook", "1250"],
+    ["Pen", "120"],
+  ]);
+});
+test("XLSX preflight rejects non-workbooks, macros and declared ZIP bombs", async () => {
+  const { inspectXlsxZip } = await import("../../src/lib/pdf/xlsx");
+  assert.ok(inspectXlsxZip(await file("sample.xlsx")).expandedBytes > 0);
+  const zip = new JSZip();
+  zip.file("test.txt", "not excel");
+  assert.throws(() => inspectXlsxZip(new Uint8Array([80, 75, 3, 4])), /valid XLSX ZIP container/);
+  const nonWorkbook = await zip.generateAsync({ type: "uint8array" });
+  assert.throws(() => inspectXlsxZip(nonWorkbook), /does not contain an Excel workbook/);
+  const macro = await JSZip.loadAsync(await file("sample.xlsx"));
+  macro.file("xl/vbaProject.bin", new Uint8Array([1]));
+  const macroBytes = await macro.generateAsync({ type: "uint8array" });
+  assert.throws(() => inspectXlsxZip(macroBytes), /Macro-enabled/);
+  const bomb = (await file("sample.xlsx")).slice(),
+    view = new DataView(bomb.buffer);
+  for (let i = 0; i < bomb.length - 46; i++)
+    if (view.getUint32(i, true) === 0x02014b50) {
+      view.setUint32(i + 24, 200 * 1024 * 1024, true);
+      break;
+    }
+  assert.throws(() => inspectXlsxZip(bomb), /safe 150 MB/);
+});
+test("Excel-to-PDF renders searchable tables with sheet headings", async () => {
+  const out = await convert.xlsxToPdf(await file("sample.xlsx")),
+    t = await text(out.bytes);
+  assert.match(t, /Items/);
+  assert.match(t, /Notebook/);
+  assert.match(t, /1250/);
+  assert.match(t, /Document conversion fixture 2026/);
+  assert.ok(out.warnings.join(" ").includes("Simplified table layout"));
+});
+test("text-first DOCX-to-PDF keeps real selectable words and tables", async () => {
+  const out = await convert.docxTextToPdf(await file("sample.docx")),
+    t = await text(out.bytes);
+  assert.match(t, /Document conversion fixture 2026/);
+  assert.match(t, /Real text\. Local processing\. No upload\./);
+  assert.match(t, /Notebook/);
+  assert.match(t, /1250/);
+  assert.ok(out.warnings.join(" ").includes("Simplified layout"));
+});
+test("extractive summary picks representative sentences without inventing text", () => {
+  const body =
+    "The quarterly revenue report shows growth. Revenue increased in every quarter. " +
+    "The office cat sat quietly by the window. Revenue growth continued strongly.";
+  const result = convert.extractiveSummary(body, 1);
+  assert.equal(result.picked, 1);
+  assert.equal(result.total, 4);
+  assert.match(result.summary, /revenue/i);
+  assert.ok(body.includes(result.summary));
+  assert.equal(convert.extractiveSummary("", 3).summary, "");
+});
+test("PDF summary honors length options and rejects scans", async () => {
+  const short = await convert.pdfSummary(await file("three-pages.pdf"), "short");
+  assert.ok(short.picked >= 1 && short.picked <= 3);
+  assert.ok(short.summary.length > 20);
+  const long = await convert.pdfSummary(await file("three-pages.pdf"), "long");
+  assert.ok(long.picked >= short.picked);
+  await assert.rejects(convert.pdfSummary(await file("scanned.pdf"), "short"), /Use OCR/);
+});
+test("form listing reports real field names, types and values", async () => {
+  const fields = await core.listFormFields(await file("form.pdf"));
+  assert.equal(fields.length, 1);
+  assert.equal(fields[0].name, "approval");
+  assert.equal(fields[0].type, "text");
+  assert.equal(fields[0].value, "APPROVED 2026");
+  assert.equal(fields[0].readOnly, false);
+});
+test("form filling stores values and refuses unknown fields", async () => {
+  const out = await core.fillFormFields(await file("form.pdf"), { approval: "UNIT 2026" }),
+    d = await core.loadPdf(out.bytes);
+  assert.deepEqual(out.filled, ["approval"]);
+  assert.equal(d.getForm().getTextField("approval").getText(), "UNIT 2026");
+  await assert.rejects(
+    core.fillFormFields(await file("form.pdf"), { missing: "x" }),
+    /No fillable/,
+  );
+});
+test("spreadsheet content sniffing accepts XLSX and rejects disguises", async () => {
+  assert.equal(identifyFile(await file("sample.xlsx"), "sample.xlsx"), "spreadsheet");
+  assert.equal(identifyFile(await file("sample.docx"), "sample.docx"), "document");
+  assert.equal(identifyFile(new TextEncoder().encode("not a zip"), "fake.xlsx"), "invalid");
+});
+test("dispatcher runs every new conversion end to end", async () => {
+  const hooks = { signal: new AbortController().signal, onProgress: () => {} };
+  const local = (name: string, type: string, bytes: Uint8Array) => ({
+    id: "test",
+    name,
+    type,
+    size: bytes.length,
+    bytes,
+  });
+  const pdf = local("three-pages.pdf", "application/pdf", await file("three-pages.pdf"));
+  const md = await executeTool("pdf-to-markdown", [pdf], DEFAULT_OPTIONS, hooks);
+  assert.match(md.files[0].name, /\.md$/);
+  assert.match(md.previewText!, /^# ALPHA PAGE ONE/m);
+  const summary = await executeTool("summarize", [pdf], DEFAULT_OPTIONS, hooks);
+  assert.match(summary.files[0].name, /-summary\.txt$/);
+  assert.ok(summary.previewText!.length > 20);
+  const xlsx = await executeTool("pdf-to-excel", [pdf], DEFAULT_OPTIONS, hooks);
+  assert.match(xlsx.files[0].name, /\.xlsx$/);
+  assert.ok((await JSZip.loadAsync(xlsx.files[0].bytes)).file("xl/workbook.xml"));
+  const book = local(
+    "sample.xlsx",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    await file("sample.xlsx"),
+  );
+  const rendered = await executeTool("excel-to-pdf", [book], DEFAULT_OPTIONS, hooks);
+  assert.match(await text(rendered.files[0].bytes), /Notebook/);
+  const word = local(
+    "sample.docx",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    await file("sample.docx"),
+  );
+  const wordPdf = await executeTool("word-to-pdf", [word], DEFAULT_OPTIONS, hooks);
+  assert.match(await text(wordPdf.files[0].bytes), /Document conversion fixture 2026/);
+  const form = local("form.pdf", "application/pdf", await file("form.pdf"));
+  const filled = await executeTool(
+    "fill-pdf-form",
+    [form],
+    { ...DEFAULT_OPTIONS, fieldValues: { approval: "DISPATCH 2026" } },
+    hooks,
+  );
+  const d = await core.loadPdf(filled.files[0].bytes);
+  assert.equal(d.getForm().getTextField("approval").getText(), "DISPATCH 2026");
 });

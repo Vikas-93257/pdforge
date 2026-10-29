@@ -44,6 +44,7 @@ async function fill(page: Page, slug: string) {
     await page.getByRole("button", { name: "Delete page 2", exact: true }).click();
   }
   if (slug === "sign") await page.getByLabel("Your signature text").fill("Alex Local");
+  if (slug === "fill-pdf-form") await page.getByLabel("Fill field approval").fill("BROWSER 2026");
   if (slug === "protect") {
     await page.getByLabel(/^Opening password/).fill("browser-test-password");
     await page.getByLabel("Confirm opening password").fill("browser-test-password");
@@ -92,6 +93,8 @@ for (const tool of TOOLS)
       names = ["three-pages.pdf", "two-pages.pdf"];
     if (tool.slug === "jpg-to-pdf") names = ["image.png", "image.webp"];
     if (tool.slug === "word-to-pdf") names = ["sample.docx"];
+    if (tool.slug === "excel-to-pdf") names = ["sample.xlsx"];
+    if (tool.slug === "fill-pdf-form") names = ["form.pdf"];
     if (tool.slug === "text-to-pdf") names = ["text.txt"];
     if (tool.slug === "repair") names = ["repairable.pdf"];
     if (tool.slug === "unlock") names = ["protected.pdf"];
@@ -155,13 +158,44 @@ for (const tool of TOOLS)
       expect(d.getPage(0).node.Resources()?.has(PDFName.of("XObject"))).toBe(true);
     } else if (tool.slug === "pdf-to-word") {
       expect(actual[0].name).toMatch(/\.docx$/);
-      const zip = await JSZip.loadAsync(actual[0].bytes);
-      expect(await zip.file("word/document.xml")!.async("string")).toContain("ALPHA PAGE THREE");
+      const xml = await (await JSZip.loadAsync(actual[0].bytes))
+        .file("word/document.xml")!
+        .async("string");
+      expect(xml).toContain("ALPHA PAGE THREE");
+      expect(xml).toContain("w:tbl");
+      expect(xml).toContain("Heading1");
     } else if (tool.slug === "word-to-pdf") {
+      await checkPdf(actual[0].bytes, 1, "Document conversion fixture 2026");
+    } else if (tool.slug === "pdf-to-markdown") {
+      expect(actual[0].name).toMatch(/\.md$/);
+      const md = new TextDecoder().decode(actual[0].bytes);
+      expect(md).toContain("# ALPHA PAGE ONE");
+      expect(md).toContain("| Item | Amount |");
+    } else if (tool.slug === "pdf-to-excel") {
+      expect(actual[0].name).toMatch(/\.xlsx$/);
+      const zip = await JSZip.loadAsync(actual[0].bytes);
+      expect(zip.file("xl/workbook.xml")).not.toBeNull();
+      expect(zip.file("xl/worksheets/sheet3.xml")).not.toBeNull();
+      const sheet = await zip.file("xl/worksheets/sheet1.xml")!.async("string");
+      expect(sheet).toContain('<c r="B4"><v>1250</v></c>');
+      expect(sheet).not.toContain("<f>");
+    } else if (tool.slug === "excel-to-pdf") {
+      await checkPdf(actual[0].bytes, 1, "Notebook");
+      expect(await pdfToText(actual[0].bytes)).toContain("fixture 2026");
+    } else if (tool.slug === "summarize") {
+      expect(actual[0].name).toMatch(/-summary\.txt$/);
+      const body = new TextDecoder().decode(actual[0].bytes);
+      expect(body.length).toBeGreaterThan(20);
+      const source = new Set(
+        (await pdfToText(new Uint8Array(await fs.readFile(fixture("three-pages.pdf")))))
+          .toLowerCase()
+          .match(/[a-z0-9]{3,}/g) ?? [],
+      );
+      for (const word of body.toLowerCase().match(/[a-z0-9]{3,}/g) ?? [])
+        expect(source.has(word)).toBe(true);
+    } else if (tool.slug === "fill-pdf-form") {
       const d = await checkPdf(actual[0].bytes, 1);
-      expect(d.getPage(0).node.Resources()?.has(PDFName.of("XObject"))).toBe(true);
-      expect((await extractTextPages(actual[0].bytes))[0].lines).toHaveLength(0);
-      expect(actual[0].bytes.length).toBeGreaterThan(5000);
+      expect(d.getForm().getTextField("approval").getText()).toBe("BROWSER 2026");
     } else if (tool.slug === "pdf-to-text")
       expect(new TextDecoder().decode(actual[0].bytes)).toContain("ALPHA PAGE THREE");
     else if (tool.slug === "text-to-pdf") await checkPdf(actual[0].bytes, 1, "English 2026");
@@ -264,3 +298,20 @@ for (const tool of TOOLS)
       contentType: "application/json",
     });
   });
+test("word-to-pdf visual mode keeps the image-based option working", async ({ page }) => {
+  test.setTimeout(90000);
+  await page.goto("tools/word-to-pdf/");
+  await page.locator('input[type="file"]').setInputFiles([fixture("sample.docx")]);
+  await expect(page.locator(".file-row")).toHaveCount(1);
+  await page.getByLabel("Conversion mode").selectOption("visual");
+  const run = page.getByRole("button", { name: "Convert to PDF", exact: true });
+  await expect(run).toBeEnabled();
+  await run.click();
+  await expect(page.locator(".result-panel")).toBeVisible({ timeout: 70000 });
+  const actual = await outputs(page);
+  expect(actual).toHaveLength(1);
+  const d = await checkPdf(actual[0].bytes, 1);
+  expect(d.getPage(0).node.Resources()?.has(PDFName.of("XObject"))).toBe(true);
+  expect((await extractTextPages(actual[0].bytes))[0].lines).toHaveLength(0);
+  expect(actual[0].bytes.length).toBeGreaterThan(5000);
+});

@@ -53,3 +53,8 @@ test("upstream model/font/qpdf license provenance remains byte-for-byte intact",
   assert.match(read("public/licenses/upstream/qpdf-LICENSE.txt"), /Apache License/);
   assert.match(read("public/fonts/OFL-NotoSans.txt"), /SIL OPEN FONT LICENSE/);
 });
+
+test("runtime type dispatch is minification-safe (no constructor.name branching)", () => {
+  assert.doesNotMatch(read("src/lib/pdf/engine.ts"), /constructor\.name/);
+  assert.match(read("src/lib/pdf/engine.ts"), /instanceof PDFTextField/);
+});

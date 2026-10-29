@@ -3,6 +3,7 @@ import { PDFDocument, StandardFonts, rgb, PDFName, PDFString } from "pdf-lib";
 import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
 import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun } from "docx";
 import { protectPdf } from "../src/lib/pdf/secure";
+import { buildXlsx } from "../src/lib/pdf/xlsx";
 const dir = "tests/fixtures";
 await fs.mkdir(dir, { recursive: true });
 async function simple(names: string[]) {
@@ -144,6 +145,22 @@ const docx = new Document({
   ],
 });
 await fs.writeFile(`${dir}/sample.docx`, await Packer.toBuffer(docx));
+const workbook = await buildXlsx([
+  {
+    name: "Items",
+    grid: [
+      ["Item", "Amount"],
+      ["Notebook", "1250"],
+      ["Pen", "120"],
+    ],
+  },
+  {
+    name: "Notes",
+    grid: [["Document conversion fixture 2026"], ["Local spreadsheet processing. No upload."]],
+  },
+]);
+if (workbook.truncated) throw new Error("Synthetic workbook exceeded the cell budget.");
+await fs.writeFile(`${dir}/sample.xlsx`, workbook.bytes);
 await fs.writeFile(
   `${dir}/text.txt`,
   "A local text document.\nहिंदी दस्तावेज़ English 2026\nNo uploads.",

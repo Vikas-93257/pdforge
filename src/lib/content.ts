@@ -22,7 +22,7 @@ export const PAGES: Article[] = [
       {
         heading: "Built around the everyday",
         paragraphs: [
-          "PDFORGE brings 30 focused document tools into a single browser workspace: combining pages, shrinking files, making simple conversions, adding a signature, and preparing documents to share. All tools are free to use; there is no premium tier or PDFORGE watermark added to your output.",
+          "PDFORGE brings 35 focused document tools into a single browser workspace: combining pages, shrinking files, making simple conversions, adding a signature, and preparing documents to share. All tools are free to use; there is no premium tier or PDFORGE watermark added to your output.",
           "It is an alternative for common PDF tasks, not a claim to reproduce every feature of a desktop editor or another online service. Office conversion is simplified, OCR makes mistakes, and some damaged or unusual documents cannot be processed. Every tool explains its limits.",
         ],
       },
@@ -264,7 +264,7 @@ export const PAGES: Article[] = [
     description:
       "Inspect PDFORGE's test method, public synthetic PDF-to-Word sample, local-processing checks and known limitations. No fake ratings or security certification.",
     eyebrow: "TESTING & PUBLIC EXAMPLES",
-    updated: "2026-10-28",
+    updated: "2026-10-30",
     intro:
       "Useful evidence should be inspectable without pretending that a passing suite makes every file safe or every conversion perfect.",
     relatedTools: ["pdf-to-word", "ocr", "compress", "redact"],
@@ -272,14 +272,14 @@ export const PAGES: Article[] = [
       {
         heading: "Real outputs, not renamed files",
         paragraphs: [
-          "The release tests run the actual tools and inspect downloaded PDFs, images, ZIP members, DOCX XML and text. Checks include PDF page order/count/geometry, selectable words, encryption/decryption with known test passwords, image orientation and comparison results. A success message or filename alone is not enough.",
-          "Native qpdf/Poppler and OCR provide additional output checks, including visible Word-conversion content and inspected source-object removal for destructive redaction/sanitization. These are synthetic fixtures, not customer documents.",
+          "The release tests run the actual tools and inspect downloaded PDFs, images, ZIP members, DOCX XML, XLSX workbooks, Markdown, summaries and filled form values. Checks include PDF page order/count/geometry, selectable words, numeric spreadsheet cells, heading/table structure, summary word provenance, encryption/decryption with known test passwords, image orientation and comparison results. A success message or filename alone is not enough.",
+          "Native qpdf/Poppler, Python zipfile and OCR provide additional output checks, including readable text-first table content, summary words drawn only from the source document and inspected source-object removal for destructive redaction/sanitization. These are synthetic fixtures, not customer documents.",
         ],
       },
       {
         heading: "A dated baseline, not a universal rating",
         paragraphs: [
-          "The published 1.1 release's recorded verification included 88 passing unit cases, 228 browser cases across Chromium/Firefox/Linux WebKit and 30 native/output checks. After deployment, 76 Chromium cases and 30 native/output checks were rerun against the public website. These numbers describe that dated release and test corpus, not every possible document.",
+          "The published 1.2 release's recorded verification included 104 passing unit cases, 267 browser cases across Chromium/Firefox/Linux WebKit and 39 native/output checks. Public-website reruns for 1.2 are pending deployment; the last completed public-host rerun is the 1.1 record of 76 Chromium cases and 30 native/output checks. These numbers describe that dated release and test corpus, not every possible document.",
           "The site does not fabricate user ratings, customer totals, endorsements, compliance badges or a 10/10 security score. Linux WebKit is engine coverage, not real-device Safari/iOS certification. Technical SEO lab scores are not Google rank, indexing or AI-recommendation guarantees.",
         ],
       },

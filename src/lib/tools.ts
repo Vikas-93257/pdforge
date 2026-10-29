@@ -5,7 +5,7 @@ export interface ToolDef {
   description: string;
   category: ToolCategory;
   icon: string;
-  accept: "pdf" | "image" | "document" | "text" | "pdf-image";
+  accept: "pdf" | "image" | "document" | "spreadsheet" | "text" | "pdf-image";
   multiple: boolean;
   cta: string;
   steps: string[];
@@ -362,7 +362,7 @@ export const TOOLS: ToolDef[] = [
   {
     slug: "pdf-to-word",
     name: "PDF to Word",
-    description: "Extract selectable PDF text into a genuine editable DOCX file.",
+    description: "Convert selectable PDF text into a structured, editable DOCX file.",
     category: "convert",
     icon: "file-text",
     accept: "pdf",
@@ -370,11 +370,11 @@ export const TOOLS: ToolDef[] = [
     cta: "Convert to Word",
     steps: [
       "Choose your file. Nothing is uploaded.",
-      "Create a Word document from the PDF’s selectable text.",
+      "Create a Word document with detected headings, simple tables and text styling.",
       "Process locally, review the result, and download your output.",
     ],
     limitation:
-      "Text and page breaks are preserved; complex layouts, tables and original styling are simplified. Run OCR first for scanned pages.",
+      "Headings, simple text tables, lists and bold/italic are detected; multi-column layouts, charts, images and original fonts are simplified. Run OCR first for scanned pages.",
     faqs: [
       {
         q: "Is PDF to Word free to use?",
@@ -386,14 +386,14 @@ export const TOOLS: ToolDef[] = [
       },
       {
         q: "What are the important limitations?",
-        a: "Text and page breaks are preserved; complex layouts, tables and original styling are simplified. Run OCR first for scanned pages.",
+        a: "Headings, simple text tables, lists and bold/italic are detected; multi-column layouts, charts, images and original fonts are simplified. Run OCR first for scanned pages.",
       },
     ],
   },
   {
     slug: "word-to-pdf",
     name: "Word to PDF",
-    description: "Render a DOCX locally into paginated, image-based PDF pages.",
+    description: "Convert a DOCX locally into a searchable text-first PDF.",
     category: "convert",
     icon: "file-type",
     accept: "document",
@@ -401,11 +401,11 @@ export const TOOLS: ToolDef[] = [
     cta: "Convert to PDF",
     steps: [
       "Choose your file. Nothing is uploaded.",
-      "Render the Word document using the browser layout engine.",
+      "Convert to searchable text by default, or choose the visual image-based mode.",
       "Process locally, review the result, and download your output.",
     ],
     limitation:
-      "DOCX only, not legacy DOC. Complex Office layouts may differ. Output is image-based, not editable or searchable text.",
+      "DOCX only, not legacy DOC. Text-first output is searchable with simplified layout; the optional visual mode renders page images instead. Complex Office layouts may differ in both modes.",
     faqs: [
       {
         q: "Is Word to PDF free to use?",
@@ -417,7 +417,7 @@ export const TOOLS: ToolDef[] = [
       },
       {
         q: "What are the important limitations?",
-        a: "DOCX only, not legacy DOC. Complex Office layouts may differ. Output is image-based, not editable or searchable text.",
+        a: "DOCX only, not legacy DOC. Text-first output is searchable with simplified layout; the optional visual mode renders page images instead. Complex Office layouts may differ in both modes.",
       },
     ],
   },
@@ -945,6 +945,161 @@ export const TOOLS: ToolDef[] = [
       {
         q: "What are the important limitations?",
         a: "Best for simple text tables. This is heuristic text-row extraction, not full spreadsheet or financial-table reconstruction. Review the CSV before using it.",
+      },
+    ],
+  },
+  {
+    slug: "pdf-to-markdown",
+    name: "PDF to Markdown",
+    description: "Turn selectable PDF text into clean Markdown with headings and tables.",
+    category: "convert",
+    icon: "file-code",
+    accept: "pdf",
+    multiple: false,
+    cta: "Convert to Markdown",
+    steps: [
+      "Choose your file. Nothing is uploaded.",
+      "Convert detected headings, lists and simple tables into Markdown.",
+      "Process locally, review the result, and download your output.",
+    ],
+    limitation:
+      "Markdown captures text structure, not exact appearance. Multi-column layouts, charts and images are simplified. Run OCR first for scanned pages.",
+    faqs: [
+      {
+        q: "Is PDF to Markdown free to use?",
+        a: "Yes. There are no subscriptions, sign-ups, daily-use quotas or premium tools. Your browser’s memory and the published file-safety limits still apply.",
+      },
+      {
+        q: "Are my files uploaded to a server?",
+        a: "The processing engine runs in your browser. Document contents, filenames or passwords are not sent to a processing server. Refreshing or clearing the workspace removes the app’s references to your files.",
+      },
+      {
+        q: "What are the important limitations?",
+        a: "Markdown captures text structure, not exact appearance. Multi-column layouts, charts and images are simplified. Run OCR first for scanned pages.",
+      },
+    ],
+  },
+  {
+    slug: "pdf-to-excel",
+    name: "PDF to Excel",
+    description: "Rebuild selectable PDF text grids as a genuine editable XLSX workbook.",
+    category: "convert",
+    icon: "sheet",
+    accept: "pdf",
+    multiple: false,
+    cta: "Convert to Excel",
+    steps: [
+      "Choose your file. Nothing is uploaded.",
+      "Rebuild positional text grids into one workbook sheet per PDF page.",
+      "Process locally, review the result, and download your output.",
+    ],
+    limitation:
+      "Best for simple text tables. This is positional grid reconstruction, not verified spreadsheet or financial-table recovery. Review every number; run OCR first for scans.",
+    faqs: [
+      {
+        q: "Is PDF to Excel free to use?",
+        a: "Yes. There are no subscriptions, sign-ups, daily-use quotas or premium tools. Your browser’s memory and the published file-safety limits still apply.",
+      },
+      {
+        q: "Are my files uploaded to a server?",
+        a: "The processing engine runs in your browser. Document contents, filenames or passwords are not sent to a processing server. Refreshing or clearing the workspace removes the app’s references to your files.",
+      },
+      {
+        q: "What are the important limitations?",
+        a: "Best for simple text tables. This is positional grid reconstruction, not verified spreadsheet or financial-table recovery. Review every number; run OCR first for scans.",
+      },
+    ],
+  },
+  {
+    slug: "excel-to-pdf",
+    name: "Excel to PDF",
+    description: "Render an XLSX workbook locally into clean, searchable PDF tables.",
+    category: "convert",
+    icon: "file-sheet",
+    accept: "spreadsheet",
+    multiple: false,
+    cta: "Convert to PDF",
+    steps: [
+      "Choose your file. Nothing is uploaded.",
+      "Render each worksheet as a searchable table with simplified styling.",
+      "Process locally, review the result, and download your output.",
+    ],
+    limitation:
+      "XLSX only, not legacy XLS. Merged cells, charts, images and custom number formats are simplified; dates use stored values. Macro-enabled files are rejected.",
+    faqs: [
+      {
+        q: "Is Excel to PDF free to use?",
+        a: "Yes. There are no subscriptions, sign-ups, daily-use quotas or premium tools. Your browser’s memory and the published file-safety limits still apply.",
+      },
+      {
+        q: "Are my files uploaded to a server?",
+        a: "The processing engine runs in your browser. Document contents, filenames or passwords are not sent to a processing server. Refreshing or clearing the workspace removes the app’s references to your files.",
+      },
+      {
+        q: "What are the important limitations?",
+        a: "XLSX only, not legacy XLS. Merged cells, charts, images and custom number formats are simplified; dates use stored values. Macro-enabled files are rejected.",
+      },
+    ],
+  },
+  {
+    slug: "fill-pdf-form",
+    name: "Fill PDF form",
+    description: "Type values into a PDF’s fillable form fields, entirely on your device.",
+    category: "edit",
+    icon: "form",
+    accept: "pdf",
+    multiple: false,
+    cta: "Save filled form",
+    steps: [
+      "Choose your file. Nothing is uploaded.",
+      "Enter a value for each detected text, checkbox or choice field.",
+      "Process locally, review the result, and download your output.",
+    ],
+    limitation:
+      "Standard AcroForm fields only; XFA forms are not supported. Fields stay editable after filling; use Flatten to make them static.",
+    faqs: [
+      {
+        q: "Is Fill PDF form free to use?",
+        a: "Yes. There are no subscriptions, sign-ups, daily-use quotas or premium tools. Your browser’s memory and the published file-safety limits still apply.",
+      },
+      {
+        q: "Are my files uploaded to a server?",
+        a: "The processing engine runs in your browser. Document contents, filenames or passwords are not sent to a processing server. Refreshing or clearing the workspace removes the app’s references to your files.",
+      },
+      {
+        q: "What are the important limitations?",
+        a: "Standard AcroForm fields only; XFA forms are not supported. Fields stay editable after filling; use Flatten to make them static.",
+      },
+    ],
+  },
+  {
+    slug: "summarize",
+    name: "Summarize PDF",
+    description: "Pick a PDF’s key sentences locally with honest extractive summarization.",
+    category: "convert",
+    icon: "summary",
+    accept: "pdf",
+    multiple: false,
+    cta: "Summarize PDF",
+    steps: [
+      "Choose your file. Nothing is uploaded.",
+      "Choose a summary length; key sentences are selected on your device.",
+      "Process locally, review the result, and download your output.",
+    ],
+    limitation:
+      "Extractive summarization selects existing sentences by word frequency; it does not understand, verify or rewrite content. Run OCR first for scanned pages.",
+    faqs: [
+      {
+        q: "Is Summarize PDF free to use?",
+        a: "Yes. There are no subscriptions, sign-ups, daily-use quotas or premium tools. Your browser’s memory and the published file-safety limits still apply.",
+      },
+      {
+        q: "Are my files uploaded to a server?",
+        a: "The processing engine runs in your browser. Document contents, filenames or passwords are not sent to a processing server. Refreshing or clearing the workspace removes the app’s references to your files.",
+      },
+      {
+        q: "What are the important limitations?",
+        a: "Extractive summarization selects existing sentences by word frequency; it does not understand, verify or rewrite content. Run OCR first for scanned pages.",
       },
     ],
   },

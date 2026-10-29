@@ -45,6 +45,9 @@ export type ToolOptions = {
   clearMetadata: boolean;
   confirm: boolean;
   text: string;
+  wordMode: "text" | "visual";
+  fieldValues: Record<string, string>;
+  summaryLength: "short" | "medium" | "long";
 };
 export const DEFAULT_OPTIONS: ToolOptions = {
   ranges: "1",
@@ -87,18 +90,22 @@ export const DEFAULT_OPTIONS: ToolOptions = {
   clearMetadata: false,
   confirm: false,
   text: "",
+  wordMode: "text",
+  fieldValues: {},
+  summaryLength: "medium",
 };
 export const ACCEPT: Record<ToolDef["accept"], string> = {
   pdf: ".pdf,application/pdf",
   image: ".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp",
   document: ".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  spreadsheet: ".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   text: ".txt,text/plain",
   "pdf-image": ".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp",
 };
 export function identifyFile(
   bytes: Uint8Array,
   name: string,
-): "pdf" | "image" | "document" | "text" | "invalid" {
+): "pdf" | "image" | "document" | "spreadsheet" | "text" | "invalid" {
   if (new TextDecoder("latin1").decode(bytes.subarray(0, 1024)).includes("%PDF-")) return "pdf";
   if (
     (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) ||
@@ -115,6 +122,14 @@ export function identifyFile(
     bytes[3] === 4
   )
     return "document";
+  if (
+    /\.xlsx$/i.test(name) &&
+    bytes[0] === 0x50 &&
+    bytes[1] === 0x4b &&
+    bytes[2] === 3 &&
+    bytes[3] === 4
+  )
+    return "spreadsheet";
   if (/\.txt$/i.test(name)) {
     try {
       const t = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
@@ -262,19 +277,80 @@ export async function executeTool(
         mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       });
       notes.push(
-        "Editable text export; original page layouts, charts and images are not reconstructed.",
+        "Structured export: headings, simple tables and bold/italic are detected. Multi-column layouts, charts and images are simplified, not reconstructed.",
       );
       break;
     case "word-to-pdf":
-      pdf(
-        await (
-          await import("./pdf/convertClient")
-        ).wordToPdf(bytes, (p) => onProgress(p, "Rendering DOCX locally"), signal),
-      );
+      if (o.wordMode === "visual") {
+        pdf(
+          await (
+            await import("./pdf/convertClient")
+          ).wordToPdf(bytes, (p) => onProgress(p, "Rendering DOCX locally"), signal),
+        );
+        notes.push(
+          "Image-based conversion. Complex Office layouts may differ and text is not selectable.",
+        );
+      } else {
+        const converted = await (await import("./pdf/convert")).docxTextToPdf(bytes, signal);
+        pdf(converted.bytes);
+        notes.push(
+          "Searchable text-first conversion. Layout is simplified; use Visual mode if exact appearance matters more than selectable text.",
+        );
+        for (const warning of converted.warnings) notes.push(warning);
+      }
+      break;
+    case "pdf-to-markdown":
+      previewText = await (await import("./pdf/convert")).pdfToMarkdown(bytes, signal);
+      text(previewText, `${base}.md`, "text/markdown;charset=utf-8");
       notes.push(
-        "Image-based conversion. Complex Office layouts may differ and text is not selectable.",
+        "Headings, lists and simple tables become Markdown. Multi-column layouts and images are simplified.",
       );
       break;
+    case "pdf-to-excel": {
+      const converted = await (await import("./pdf/convert")).pdfToXlsx(bytes, signal);
+      output.push({
+        bytes: converted.bytes,
+        name: `${base}.xlsx`,
+        mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      notes.push(
+        `Workbook with ${converted.sheets} page ${converted.sheets === 1 ? "sheet" : "sheets"}. Simple positional grids are rebuilt; review numbers before relying on them.`,
+      );
+      if (converted.truncated)
+        notes.push("The spreadsheet exceeded the 250,000-cell budget; later rows were skipped.");
+      break;
+    }
+    case "excel-to-pdf": {
+      const converted = await (await import("./pdf/convert")).xlsxToPdf(bytes, signal);
+      pdf(converted.bytes);
+      for (const warning of converted.warnings) notes.push(warning);
+      break;
+    }
+    case "fill-pdf-form": {
+      const result = await engine.fillFormFields(bytes, o.fieldValues);
+      pdf(result.bytes);
+      notes.push(
+        `Updated ${result.filled.length} field${result.filled.length === 1 ? "" : "s"}. Fields stay editable; use Flatten to make them static.`,
+      );
+      if (result.skipped.length)
+        notes.push(
+          `${result.skipped.length} field${result.skipped.length === 1 ? " was" : "s were"} skipped (read-only, unsupported or invalid value).`,
+        );
+      break;
+    }
+    case "summarize": {
+      const summary = await (
+        await import("./pdf/convert")
+      ).pdfSummary(bytes, o.summaryLength, signal);
+      previewText = summary.summary;
+      text(summary.summary, `${base}-summary.txt`);
+      notes.push(
+        `Extractive summary: ${summary.picked} of ${summary.total} sentences, chosen locally by word frequency. This is not AI understanding; verify against the source.`,
+      );
+      if (summary.truncated)
+        notes.push("Only the first 500,000 characters were considered for this summary.");
+      break;
+    }
     case "pdf-to-text":
       previewText = await (await import("./pdf/convert")).pdfToText(bytes, signal);
       text(previewText, `${base}.txt`);

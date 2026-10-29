@@ -70,6 +70,69 @@ try {
   } finally {
     await worker.terminate();
   }
+  for (const [slug, name] of [
+    ["pdf-to-word", "three-pages.docx"],
+    ["pdf-to-excel", "three-pages.xlsx"],
+  ]) {
+    const target = path.join("reports/downloads", slug, name),
+      checked = spawnSync(
+        "python3",
+        [
+          "-c",
+          "import sys,zipfile; zipfile.ZipFile(sys.argv[1]).testzip() or print('ZIP OK')",
+          target,
+        ],
+        { encoding: "utf8" },
+      );
+    assert.equal(checked.status, 0, `${target}: ${checked.stderr}`);
+    assert.match(checked.stdout, /ZIP OK/, `${target} is not a valid ZIP container`);
+    results.push({
+      check: `Independent Python zipfile validates browser ${slug} output`,
+      result: "PASS",
+    });
+  }
+  const excelText = spawnSync(
+    "pdftotext",
+    ["reports/downloads/excel-to-pdf/sample-excel-to-pdf.pdf", "-"],
+    { encoding: "utf8" },
+  );
+  assert.equal(excelText.status, 0);
+  assert.match(excelText.stdout, /Notebook/);
+  assert.match(excelText.stdout, /1250/);
+  results.push({ check: "Independent Poppler reads Excel-to-PDF table text", result: "PASS" });
+  const wordText = spawnSync(
+    "pdftotext",
+    ["reports/downloads/word-to-pdf/sample-word-to-pdf.pdf", "-"],
+    { encoding: "utf8" },
+  );
+  assert.equal(wordText.status, 0);
+  assert.match(wordText.stdout, /Document conversion fixture 2026/);
+  results.push({
+    check: "Independent Poppler reads text-first Word-to-PDF output",
+    result: "PASS",
+  });
+  const markdown = await fs.readFile("reports/downloads/pdf-to-markdown/three-pages.md", "utf8");
+  assert.match(markdown, /^# ALPHA PAGE ONE/m);
+  assert.match(markdown, /\| Item \| Amount \|/);
+  results.push({ check: "Markdown export keeps headings and pipe tables", result: "PASS" });
+  const summary = await fs.readFile("reports/downloads/summarize/three-pages-summary.txt", "utf8"),
+    sourceText = spawnSync("pdftotext", ["tests/fixtures/three-pages.pdf", "-"], {
+      encoding: "utf8",
+    });
+  assert.equal(sourceText.status, 0);
+  const sourceWords = new Set(sourceText.stdout.toLowerCase().match(/[a-z0-9]{3,}/g) ?? []);
+  assert.ok(summary.trim().length > 20, "summary is unexpectedly short");
+  for (const word of summary.toLowerCase().match(/[a-z0-9]{3,}/g) ?? [])
+    assert.ok(sourceWords.has(word), `summary invents out-of-source word: ${word}`);
+  results.push({ check: "Summary uses only source-document words", result: "PASS" });
+  const filledJson = spawnSync(
+    "qpdf",
+    ["--json", "reports/downloads/fill-pdf-form/form-fill-pdf-form.pdf"],
+    { encoding: "utf8" },
+  );
+  assert.equal(filledJson.status, 0);
+  assert.ok(filledJson.stdout.includes("BROWSER 2026"), "filled value missing from form objects");
+  results.push({ check: "qpdf object inspection finds the filled form value", result: "PASS" });
   for (const slug of ["redact", "sanitize"]) {
     const dir = path.join("reports/downloads", slug),
       name = (await fs.readdir(dir)).find((n) => n.endsWith(".pdf"))!,
