@@ -5,7 +5,7 @@ import { absolute } from "@/lib/site";
 export const dynamic = "force-static";
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
-    { url: absolute(), lastModified: "2026-10-28", changeFrequency: "monthly", priority: 1 },
+    { url: absolute(), lastModified: "2026-10-30", changeFrequency: "monthly", priority: 1 },
     {
       url: absolute("pipelines/"),
       lastModified: "2026-10-30",
@@ -20,7 +20,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     ...TOOLS.map((t) => ({
       url: absolute(`tools/${t.slug}/`),
-      lastModified: "2026-10-28",
+      lastModified: "2026-10-30",
       changeFrequency: "monthly" as const,
       priority: 0.8,
     })),
