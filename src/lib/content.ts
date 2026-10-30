@@ -531,4 +531,78 @@ GUIDES.push(
       },
     ],
   },
+  {
+    slug: "cloud-storage-setup",
+    title: "Connect Google Drive, Dropbox or OneDrive without a server",
+    description:
+      "Enable optional client-side cloud import and export: register a least-privilege OAuth app, set a public client ID and keep document bytes out of any middleman.",
+    eyebrow: "PRACTICAL PDF GUIDE",
+    updated: "2026-10-30",
+    intro:
+      "Cloud buttons stay hidden until the site owner registers the provider apps. There is deliberately no shared PDFORGE OAuth client: your sign-in, tokens and files travel only between your browser and the provider you choose.",
+    sections: [
+      {
+        heading: "How the connection works",
+        paragraphs: [
+          "Each provider uses OAuth 2.0 with PKCE, the public-client flow designed for browser apps. PDFORGE opens the provider's own sign-in page, receives a one-time code and exchanges it for tokens directly with the provider's token endpoint.",
+          "Tokens live only in the tab's session storage and are cleared when you disconnect or close the tab. Google access is limited to files you open or create with the app, Dropbox needs file-content scopes on your app, and OneDrive is limited to the application's own folder.",
+        ],
+      },
+      {
+        heading: "Register the three provider apps",
+        paragraphs: [
+          "Google: create an OAuth client ID of type Web application in Google Cloud Console, add https://YOUR-SITE/oauth/callback/ as an authorized redirect URI and enable the Drive API. Only the drive.file scope is requested.",
+          "Dropbox: create a scoped app in the Dropbox App Console with files.content.read and files.content.write permission, and add the same /oauth/callback/ redirect URI.",
+          "OneDrive: register an app in Microsoft Entra, add the redirect URI as a single-page-application reply URL and grant the delegated Files.ReadWrite.AppFolder permission.",
+        ],
+      },
+      {
+        heading: "Publish the public client IDs",
+        paragraphs: [
+          "Set NEXT_PUBLIC_GOOGLE_CLIENT_ID, NEXT_PUBLIC_DROPBOX_CLIENT_ID and NEXT_PUBLIC_ONEDRIVE_CLIENT_ID as build-time values and redeploy. These identifiers are public by design; there is no client secret because PKCE replaces it.",
+          "Providers you skip simply stay hidden in the interface. Users can still download to their device and upload to any cloud by hand.",
+        ],
+      },
+      {
+        heading: "What the provider still learns",
+        paragraphs: [
+          "Using a cloud connection necessarily tells that provider which files you open or save, when, and from which address. Document processing itself stays local, but the file transfer is between you and the provider under their terms.",
+          "For maximum privacy, keep files on your device. Cloud buttons are a convenience for people who already store documents with these providers, not a recommendation to start.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "command-line-pipelines",
+    title: "Script the same engine from your terminal",
+    description:
+      "Run every local tool and multi-step pipeline from Node with the pdforge CLI: batch files, override options, emit JSON and keep bytes on your machine.",
+    eyebrow: "PRACTICAL PDF GUIDE",
+    updated: "2026-10-30",
+    intro:
+      "The CLI wraps the exact engine the browser app uses. From your local copy of the application source, with Node 22 and dependencies installed, run npm run pdforge -- --help to start.",
+    sections: [
+      {
+        heading: "Run one tool",
+        paragraphs: [
+          "Pass a tool slug, input files and an output directory: npm run pdforge -- compress report.pdf --out ./done. Names, notes and byte-identical outputs match the app; single-file tools accept one input exactly like the browser.",
+          "Adjust behavior with --set key=value (compression, ranges, angle and every other documented option), --password for protect and unlock, --field name=value for form filling and --signature image.png for visual signatures. Unknown options and values are rejected rather than guessed.",
+        ],
+      },
+      {
+        heading: "Run a pipeline",
+        paragraphs: [
+          "Pass pipe plus a ready-made id or a comma-separated chain: npm run pdforge -- pipe split-and-flatten bundle.pdf --out ./pages, or npm run pdforge -- pipe sanitize,compress scan.pdf --out ./done --confirm. Pipelines map steps over every input file.",
+          "Chains are compatibility-checked before anything runs, image-rebuilding steps need --confirm, and per-step notes are prefixed so logs stay attributable. OCR and visual Word mode need the browser engine and refuse with an explanation instead of failing halfway.",
+        ],
+      },
+      {
+        heading: "Automate with JSON and exit codes",
+        paragraphs: [
+          "Add --json for a machine-readable summary of written files, notes and pipeline stages, or --quiet to print only output paths. Exit 0 means success, 1 means usage error and 2 means processing failed.",
+          "The same safety caps apply: 100 MB per file, 300 MB total and 50 files. The CLI makes no network calls at all — providers, fonts and models stay untouched.",
+        ],
+      },
+    ],
+  },
 );

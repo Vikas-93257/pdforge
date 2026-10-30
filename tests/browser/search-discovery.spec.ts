@@ -66,8 +66,8 @@ test("testing page labels dated evidence and avoids fake ratings/certifications"
   await expect(page.locator(".article-content")).toContainText("dated release");
   await expect(page.locator(".article-content")).toContainText("not every possible document");
   const record = await (await request.get("testing-baseline.json")).json();
-  expect(record.testedRelease).toBe("1.3.0");
-  expect(record.crossEngineBrowserCasesPassed).toBe(273);
+  expect(record.testedRelease).toBe("1.4.0");
+  expect(record.crossEngineBrowserCasesPassed).toBe(288);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });
 test("tool discovery content remains accessible and reflows at 320px", async ({ page }) => {

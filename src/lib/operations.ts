@@ -173,13 +173,19 @@ export type ToolResult = {
   previewText?: string;
   metrics?: { before: number; after: number };
 };
+export type ToolHooks = {
+  signal: AbortSignal;
+  onProgress: (percent: number | null, label: string) => void;
+  env?: import("./pdf/render").CanvasEnv;
+  normalize?: (bytes: Uint8Array, type: string) => Promise<{ bytes: Uint8Array; type: string }>;
+};
 export async function executeTool(
   slug: string,
   files: LocalFile[],
   o: ToolOptions,
-  hooks: { signal: AbortSignal; onProgress: (percent: number | null, label: string) => void },
+  hooks: ToolHooks,
 ): Promise<ToolResult> {
-  const { signal, onProgress } = hooks;
+  const { signal, onProgress, env, normalize } = hooks;
   const engine = await import("./pdf/engine");
   const check = () => {
     if (signal.aborted) throw new engine.PdfError("Processing cancelled.", "CANCELLED");
@@ -235,7 +241,7 @@ export async function executeTool(
     case "compress": {
       const r = await (
         await import("./pdf/render")
-      ).compressPdf(bytes, o.compression, { signal, onProgress: progress });
+      ).compressPdf(bytes, o.compression, { signal, onProgress: progress, env });
       pdf(r.bytes);
       metrics = { before: r.before, after: r.after };
       notes.push(r.mode);
@@ -259,6 +265,7 @@ export async function executeTool(
           format: slug === "pdf-to-png" ? "png" : "jpeg",
           pages: o.ranges.trim() || undefined,
           onProgress: progress,
+          env,
         })),
       );
       break;
@@ -267,7 +274,11 @@ export async function executeTool(
         images = [];
       for (const file of files) {
         check();
-        images.push(await render.normalizeImage(file.bytes, file.type));
+        images.push(
+          normalize
+            ? await normalize(file.bytes, file.type)
+            : await render.normalizeImage(file.bytes, file.type),
+        );
       }
       pdf(
         await engine.imagesToPdf(images, {
@@ -281,7 +292,7 @@ export async function executeTool(
     }
     case "pdf-to-word":
       output.push({
-        bytes: await (await import("./pdf/convert")).pdfToDocx(bytes, signal),
+        bytes: await (await import("./pdf/convert")).pdfToDocx(bytes, signal, env),
         name: `${base}.docx`,
         mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       });
@@ -309,7 +320,7 @@ export async function executeTool(
       }
       break;
     case "pdf-to-markdown":
-      previewText = await (await import("./pdf/convert")).pdfToMarkdown(bytes, signal);
+      previewText = await (await import("./pdf/convert")).pdfToMarkdown(bytes, signal, env);
       text(previewText, `${base}.md`, "text/markdown;charset=utf-8");
       notes.push(
         "Headings, lists and simple tables become Markdown, with small page images embedded. Multi-column order and appearance are simplified.",
@@ -336,7 +347,7 @@ export async function executeTool(
       break;
     }
     case "pdf-to-powerpoint": {
-      const converted = await (await import("./pdf/pptx")).pdfToPptx(bytes, signal);
+      const converted = await (await import("./pdf/pptx")).pdfToPptx(bytes, signal, env);
       output.push({
         bytes: converted.bytes,
         name: `${base}.pptx`,
@@ -480,8 +491,14 @@ export async function executeTool(
                 scale: o.scale,
                 signal,
                 onProgress: progress,
+                env,
               })
-            : await render.rasterizePdf(bytes, { scale: o.scale, signal, onProgress: progress }),
+            : await render.rasterizePdf(bytes, {
+                scale: o.scale,
+                signal,
+                onProgress: progress,
+                env,
+              }),
         );
         notes.push(
           "Fresh image-only PDF: no original selectable text, metadata, attachments, forms or links. Review visible content before sharing.",
@@ -491,7 +508,10 @@ export async function executeTool(
     case "ocr": {
       let input = bytes;
       if (identifyFile(bytes, files[0].name) === "image") {
-        const image = await (await import("./pdf/render")).normalizeImage(bytes, files[0].type);
+        const render = await import("./pdf/render");
+        const image = normalize
+          ? await normalize(bytes, files[0].type)
+          : await render.normalizeImage(bytes, files[0].type);
         input = await engine.imagesToPdf([image], {
           pageSize: "fit",
           orientation: "auto",
@@ -526,7 +546,7 @@ export async function executeTool(
       {
         const r = await (
           await import("./pdf/render")
-        ).comparePdfs(bytes, files[1].bytes, { signal, onProgress: progress });
+        ).comparePdfs(bytes, files[1].bytes, { signal, onProgress: progress, env });
         output.push(...r.images);
         text(
           JSON.stringify(

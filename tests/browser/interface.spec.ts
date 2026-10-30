@@ -237,6 +237,10 @@ test("cancellation leaves no partial or fake completed result", async ({ page })
     await page.getByRole("button", { name: "Cancel processing", exact: true }).click();
     await expect(page.locator('.form-error[role="alert"]')).toContainText("cancelled");
     await expect(page.locator(".result-panel")).toHaveCount(0);
+    // The hold has served its purpose once cancellation is confirmed: release it
+    // so a terminated worker whose script never loaded can settle out of the
+    // worker list (Firefox keeps reporting it while the fetch is pending).
+    release();
     await expect.poll(() => page.workers().length).toBe(0);
   } finally {
     release();

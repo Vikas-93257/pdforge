@@ -881,3 +881,90 @@ test("dispatcher runs every new conversion end to end", async () => {
   const d = await core.loadPdf(filled.files[0].bytes);
   assert.equal(d.getForm().getTextField("approval").getText(), "DISPATCH 2026");
 });
+test("pipelines validate chains and thread file sets through steps", async () => {
+  const pipes = await import("../../src/lib/pipelines");
+  const hooks = { signal: new AbortController().signal, onProgress: () => {} };
+  const local = (name: string, type: string, bytes: Uint8Array) => ({
+    id: "test",
+    name,
+    type,
+    size: bytes.length,
+    bytes,
+  });
+  const pdf = local("three-pages.pdf", "application/pdf", await file("three-pages.pdf"));
+  assert.equal(pipes.PIPELINES.length, 8);
+  for (const preset of pipes.PIPELINES) pipes.validateChain(preset.steps.map((s) => s.slug));
+  assert.throws(() => pipes.validateChain(["pdf-to-word", "compress"]), /cannot open/);
+  assert.throws(() => pipes.validateChain([]), /at least one/);
+  assert.throws(
+    () => pipes.validateChain(Array.from({ length: 9 }, () => "compress")),
+    /limited to 8/,
+  );
+  const out = await pipes.executePipeline(
+    [{ slug: "split", options: { splitMode: "each" } }, { slug: "flatten" }],
+    [pdf],
+    DEFAULT_OPTIONS,
+    hooks,
+  );
+  assert.equal(out.files.length, 3);
+  assert.deepEqual(
+    out.stages.map((s) => [s.slug, s.inFiles, s.outFiles]),
+    [
+      ["split", 1, 3],
+      ["flatten", 3, 3],
+    ],
+  );
+  assert.ok(out.notes.every((n) => n.startsWith("Step ")));
+  await assert.rejects(
+    pipes.executePipeline([{ slug: "sanitize" }], [pdf], DEFAULT_OPTIONS, hooks),
+    /Confirm/,
+  );
+  const img = local("image.png", "image/png", await file("image.png"));
+  await assert.rejects(
+    pipes.executePipeline([{ slug: "compress" }], [img], DEFAULT_OPTIONS, hooks),
+    /cannot start/,
+  );
+  const word = local(
+    "sample.docx",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    await file("sample.docx"),
+  );
+  const packed = await pipes.executePipeline(
+    pipes.PIPELINES.find((p) => p.id === "office-pdf-pack")!.steps,
+    [word],
+    DEFAULT_OPTIONS,
+    hooks,
+  );
+  assert.match(await text(packed.files[0].bytes), /Document conversion fixture 2026/);
+});
+test("local CLI converts, pipes and refuses honestly", async () => {
+  const run = (args: string[]) =>
+    spawnSync(process.execPath, ["node_modules/tsx/dist/cli.mjs", "cli/pdforge.mts", ...args], {
+      encoding: "utf8",
+    });
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "pdforge-cli-"));
+  const list = run(["list"]);
+  assert.equal(list.status, 0);
+  assert.match(list.stdout, /pdf-to-word/);
+  assert.match(list.stdout, /split-and-flatten/);
+  const single = run(["pdf-to-text", "tests/fixtures/three-pages.pdf", "--out", dir, "--quiet"]);
+  assert.equal(single.status, 0);
+  assert.match(single.stdout, /three-pages\.txt/);
+  const piped = run([
+    "pipe",
+    "split-and-flatten",
+    "tests/fixtures/three-pages.pdf",
+    "--out",
+    dir,
+    "--quiet",
+  ]);
+  assert.equal(piped.status, 0);
+  assert.equal(piped.stdout.trim().split("\n").length, 3);
+  const ocr = run(["ocr", "tests/fixtures/scanned.pdf", "--out", dir]);
+  assert.notEqual(ocr.status, 0);
+  assert.match(ocr.stdout + ocr.stderr, /browser engine/);
+  const bad = run(["compress", "tests/fixtures/three-pages.pdf", "--set", "compression=bogus"]);
+  assert.notEqual(bad.status, 0);
+  assert.match(bad.stdout + bad.stderr, /must be one of/);
+  await fs.rm(dir, { recursive: true, force: true });
+});

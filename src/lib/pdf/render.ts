@@ -371,9 +371,13 @@ export async function normalizeImage(bytes: Uint8Array, type: string) {
 export async function comparePdfs(
   first: Uint8Array,
   second: Uint8Array,
-  opts: { signal?: AbortSignal; onProgress?: (done: number, total: number) => void } = {},
+  opts: {
+    signal?: AbortSignal;
+    onProgress?: (done: number, total: number) => void;
+    env?: CanvasEnv;
+  } = {},
 ) {
-  const env = browserEnv(),
+  const env = opts.env ?? browserEnv(),
     a = await openDocument(first),
     b = await openDocument(second);
   const total = Math.max(a.doc.numPages, b.doc.numPages);

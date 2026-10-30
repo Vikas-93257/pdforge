@@ -148,6 +148,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <Link href="/tools/sign/" prefetch={false}>
                 Sign a PDF
               </Link>
+              <Link href="/pipelines/" prefetch={false}>
+                Pipelines
+              </Link>
             </div>
             <div>
               <h2>Good to know</h2>

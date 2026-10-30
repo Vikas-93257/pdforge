@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.4.0 — 2026-10-30 (ecosystem release)
+
+- Added multi-step pipelines: 8 ready-made workflows plus a custom chain
+  builder that only offers compatible next steps. Steps thread file sets
+  through, with per-stage counts, default settings and honest gates for
+  passwords and image-rebuilding confirms.
+- Added a local pdforge CLI with the same engine: single tools, pipelines,
+  option overrides, form fields, signatures, JSON output and exit codes.
+  OCR and visual Word mode refuse with an explanation instead of failing.
+- Added client-side cloud storage: Google Drive, Dropbox and OneDrive over
+  OAuth PKCE with least-privilege scopes. Tokens stay in the tab; providers
+  stay hidden until the site owner sets public client IDs.
+- Fixed the PPTX input label on the file drop zone.
+- No accounts, uploads, paywall, e-sign cloud, AI cloud or repository-visibility
+  changes; original application source stays private/restricted.
+
 ## 1.3.0 — 2026-10-30 (slides + extraction release)
 
 - Added two real tools: PDF to PowerPoint (one editable slide per page with

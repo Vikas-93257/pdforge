@@ -98,13 +98,13 @@ for (const file of pages) {
 if (errors.length) console.error("Page validation issues:", errors);
 const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8"),
   listed = Array.from(sitemap.matchAll(/<loc>(.*?)<\/loc>/g), (m) => m[1]);
-assert.equal(new Set(listed).size, 52, "Expected 52 unique sitemap entries");
+assert.equal(new Set(listed).size, 56, "Expected 56 unique sitemap entries");
 assert.deepEqual(
   [...listed].sort(),
   [...canonicalURLs].sort(),
   "Sitemap and canonical pages must match",
 );
-assert.equal(pages.length, 52, "Expected 52 content pages");
+assert.equal(pages.length, 56, "Expected 56 content pages");
 assert.ok(fs.existsSync(path.join(root, ".nojekyll")));
 assert.ok(fs.readFileSync(path.join(root, "robots.txt"), "utf8").includes(site + "/sitemap.xml"));
 const manifest = JSON.parse(fs.readFileSync(path.join(root, "engines/manifest.json"), "utf8"));

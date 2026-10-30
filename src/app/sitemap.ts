@@ -6,6 +6,18 @@ export const dynamic = "force-static";
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: absolute(), lastModified: "2026-10-28", changeFrequency: "monthly", priority: 1 },
+    {
+      url: absolute("pipelines/"),
+      lastModified: "2026-10-30",
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    },
+    {
+      url: absolute("oauth/callback/"),
+      lastModified: "2026-10-30",
+      changeFrequency: "yearly" as const,
+      priority: 0.1,
+    },
     ...TOOLS.map((t) => ({
       url: absolute(`tools/${t.slug}/`),
       lastModified: "2026-10-28",
