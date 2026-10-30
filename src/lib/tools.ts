@@ -745,7 +745,7 @@ export const TOOLS: ToolDef[] = [
       "Process locally, review the result, and download your output.",
     ],
     limitation:
-      "All pages are rasterized into a fresh PDF without original text, attachments, links, forms or metadata. Selection must fully cover the information. Review the result before sharing.",
+      "All pages are rasterized into a fresh PDF without original text, attachments, links, forms or metadata. A Markdown log records every burned region. Selection must fully cover the information. Review the result before sharing.",
     faqs: [
       {
         q: "Is Redact PDF permanently free to use?",

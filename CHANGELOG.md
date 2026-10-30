@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.0 — 2026-10-30 (compliance release)
+
+- Added redaction audit logs: every redaction downloads a deterministic
+  Markdown record of regions by page and position plus method and scale.
+- Added CLI watch mode: run one tool over a hot folder with stable-file
+  detection, per-file receipts, logged skips and --max-files batches.
+  Merge, compare and OCR are refused upfront with reasons.
+- No accounts, uploads, paywall, e-sign cloud or repository-visibility
+  changes; original application source stays private/restricted.
+
 ## 1.6.0 — 2026-10-30 (business release)
 
 - Added SHA-256 audit receipts: every app run and every CLI run with

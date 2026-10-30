@@ -349,6 +349,21 @@ export async function redactPdf(
     throw new PdfError("Select at least one region to redact. Nothing has been changed.", "INPUT");
   return rasterizePdf(bytes, { ...opts, boxes });
 }
+// Deterministic audit record: regions and method only, no timestamps, so the
+// same input and settings always produce the same log in the app and the CLI.
+export function formatRedactionLog(
+  boxes: RedactionBox[],
+  pageCount: number,
+  sourceName: string,
+  scale: number,
+): string {
+  const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
+  const lines = boxes.map(
+    (b, i) =>
+      `- Region ${i + 1} — page ${b.page} of ${pageCount}: left ${pct(b.x)}, top ${pct(b.y)}, width ${pct(b.width)}, height ${pct(b.height)}`,
+  );
+  return `# Redaction log — ${sourceName}\n\n_${boxes.length} regions burned to solid black on a visual-only rebuild. Verify the output PDF visually before sharing._\n\n## Regions\n\n${lines.join("\n")}\n\n## Method\n\n- Pages re-rendered as images at scale ${scale}; original text, forms, signatures, metadata, attachments and links removed.\n- Percentages start at the top-left of the visible, rotated page.\n`;
+}
 export async function normalizeImage(bytes: Uint8Array, type: string) {
   if (typeof createImageBitmap === "undefined")
     throw new PdfError("Image decoding is unavailable. Use a current browser.", "BROWSER");

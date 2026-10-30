@@ -14,13 +14,14 @@ import {
 } from "../src/lib/operations";
 import { TOOLS, getTool } from "../src/lib/tools";
 import { PIPELINES, executePipeline, validateChain } from "../src/lib/pipelines";
-import { nodeEnv, nodeNormalize } from "./nodeEnv.mts";
+import { nodeEnv, nodeNormalize } from "./nodeEnv";
 
 const HELP = `pdforge — local document tools (no uploads, no server)
 
   pdforge list
   pdforge <tool-slug> <input...> [--out DIR] [options]
   pdforge pipe <preset-id|slug,slug,...> <input...> [--out DIR] [options]
+  pdforge watch <tool-slug> <folder> [--out DIR] [--poll MS] [--max-files N] [options]
 
 Options:
   --out DIR        output directory (default ./pdforge-out)
@@ -31,6 +32,8 @@ Options:
   --signature PNG  signature image for the sign tool
   --json           print a machine-readable result summary
   --receipt        also write a SHA-256 audit receipt JSON
+  --poll MS          watch rescan interval (watch only, default 2000)
+  --max-files N      watch exits after N files (watch only, default 0 = until Ctrl+C)
   --quiet          only print errors and the output list
   -h, --help       this text
 
@@ -50,6 +53,8 @@ type Args = {
   json: boolean;
   quiet: boolean;
   receipt: boolean;
+  pollMs: number;
+  maxFiles: number;
 };
 
 function parseArgs(argv: string[]): Args {
@@ -65,6 +70,8 @@ function parseArgs(argv: string[]): Args {
     json: false,
     quiet: false,
     receipt: false,
+    pollMs: 2000,
+    maxFiles: 0,
   };
   const rest = [...argv];
   if (!rest.length || rest[0] === "-h" || rest[0] === "--help") {
@@ -93,7 +100,15 @@ function parseArgs(argv: string[]): Args {
     else if (token === "--json") args.json = true;
     else if (token === "--quiet") args.quiet = true;
     else if (token === "--receipt") args.receipt = true;
-    else if (token === "-h" || token === "--help") {
+    else if (token === "--poll") {
+      args.pollMs = Number(rest.shift() ?? fail("--poll needs milliseconds"));
+      if (!Number.isInteger(args.pollMs) || args.pollMs < 100 || args.pollMs > 60000)
+        fail("--poll must be 100-60000ms");
+    } else if (token === "--max-files") {
+      args.maxFiles = Number(rest.shift() ?? fail("--max-files needs a number"));
+      if (!Number.isInteger(args.maxFiles) || args.maxFiles < 0)
+        fail("--max-files must be 0 or more");
+    } else if (token === "-h" || token === "--help") {
       console.log(HELP);
       process.exit(0);
     } else if (token.startsWith("-")) fail(`Unknown flag ${token}`);
@@ -143,6 +158,39 @@ function parseValue(key: string, raw: string): unknown {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  if (args.command === "watch") {
+    const [toolSlug, folder] = args.inputs;
+    if (!toolSlug || !folder) fail("Usage: pdforge watch <tool-slug> <folder> [--out DIR]");
+    const { runWatch } = await import("./watch");
+    const options: ToolOptions = { ...DEFAULT_OPTIONS };
+    for (const [key, raw] of Object.entries(args.set)) {
+      if (!(key in options)) fail(`Unknown option --set ${key}=...`);
+      (options as Record<string, unknown>)[key] = parseValue(key, raw);
+    }
+    for (const [key, value] of Object.entries(args.fields)) options.fieldValues[key] = value;
+    if (args.password) {
+      options.password = args.password;
+      options.passwordConfirm = args.password;
+    }
+    if (args.confirm) options.confirm = true;
+    if (args.signature)
+      options.signature = new Uint8Array(
+        await fs.readFile(args.signature).catch(() => fail(`Cannot read ${args.signature}`)),
+      );
+    await runWatch({
+      toolSlug,
+      dir: folder,
+      out: args.out,
+      options,
+      receipt: args.receipt,
+      quiet: args.quiet,
+      pollMs: args.pollMs,
+      maxFiles: args.maxFiles,
+    });
+    return;
+  }
+  if (args.pollMs !== 2000 || args.maxFiles !== 0)
+    fail("--poll and --max-files are only valid with the watch command");
   if (args.command === "list") {
     console.log("TOOLS");
     for (const t of TOOLS)

@@ -71,13 +71,13 @@ try {
         canonicalTestOrigin: env.NEXT_PUBLIC_SITE_URL,
         note: "Reserved example.invalid is a synthetic build-time canonical test, not a public deployment.",
         browserTools: 38,
-        staticPages: 59,
+        staticPages: 60,
       },
       null,
       2,
     ),
   );
-  console.log("Project-path verification passed: all 38 tools and 59 static content pages.");
+  console.log("Project-path verification passed: all 38 tools and 60 static content pages.");
 } catch (error) {
   console.error(error);
   process.exitCode = 1;

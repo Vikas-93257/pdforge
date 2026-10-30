@@ -525,6 +525,15 @@ export async function executeTool(
         notes.push(
           "Fresh image-only PDF: no original selectable text, metadata, attachments, forms or links. Review visible content before sharing.",
         );
+        if (slug === "redact") {
+          const pages = (await engine.loadPdf(bytes)).getPageCount();
+          text(
+            render.formatRedactionLog(o.boxes, pages, files[0]?.name ?? "document.pdf", o.scale),
+            `${base}-redaction-log.md`,
+            "text/markdown",
+          );
+          notes.push(`${o.boxes.length} redacted regions recorded in the downloadable audit log.`);
+        }
         break;
       }
     case "ocr": {

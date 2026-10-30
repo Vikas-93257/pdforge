@@ -673,4 +673,38 @@ GUIDES.push(
       },
     ],
   },
+  {
+    slug: "redaction-logs-and-watch-folders",
+    title: "Prove redactions and automate the routine",
+    description:
+      "Every redaction ships a region-by-region audit log, and the CLI watch mode processes hot folders unattended with per-file receipts.",
+    eyebrow: "PRACTICAL PDF GUIDE",
+    updated: "2026-10-30",
+    intro:
+      "Compliance is a paper trail plus a repeatable process. Redact now writes both parts: a human-readable log of what was burned, and a watch mode that applies vetted settings to every file that lands in a folder.",
+    relatedTools: ["redact", "sanitize", "inspect", "page-numbers"],
+    sections: [
+      {
+        heading: "Read the redaction log",
+        paragraphs: [
+          "Each redaction downloads two files: the rebuilt PDF and a Markdown log listing every region by page with left, top, width and height percentages plus the rebuild method and scale. The log is deterministic — the same input and settings always produce the same text in the app and the CLI.",
+          "Percentages start at the top-left of the visible, rotated page, matching the editor. Keep the log with the disclosure file; it shows what was covered without embedding any document content.",
+        ],
+      },
+      {
+        heading: "Run a watch folder",
+        paragraphs: [
+          "From your local copy of the application source: npm run pdforge -- watch compress ./inbox --out ./done processes every PDF that lands in ./inbox with the same engine and limits as the app. Add --set key=value for vetted settings, --receipt for per-file audit receipts and --poll to tune the rescan interval.",
+          "A file is picked up only after its size and modification time survive one full poll unchanged, so half-written uploads are never processed. Incompatible files are skipped with a logged reason while the folder keeps running; merge, compare and OCR are refused upfront because they need multiple files or the browser engine.",
+        ],
+      },
+      {
+        heading: "Mind the honest limits",
+        paragraphs: [
+          "Watch mode is stateless: it keeps no queue on disk, so restarting reprocesses the folder. Use separate input and output folders, and archive or move processed originals with your own scripts. --max-files N is provided for scheduled batches that should exit after N files.",
+          "The log attests to regions, not to judgment: a box that misses a glyph edge is faithfully recorded and still wrong. Independent visual review of the rebuilt PDF remains mandatory before any disclosure.",
+        ],
+      },
+    ],
+  },
 );

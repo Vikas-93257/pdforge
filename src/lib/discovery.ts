@@ -422,7 +422,7 @@ export const DISCOVERY: Record<string, DiscoveryEntry> = {
     usefulFor:
       "Remove selected visible sensitive regions before disclosure when an image-only result is acceptable. Cover every occurrence, including repeated page content and glyph edges.",
     produces:
-      "A freshly rebuilt image-only PDF. Selected pixels are covered before embedding new page images; original text, source image objects, metadata, attachments and forms are not copied.",
+      "A freshly rebuilt image-only PDF plus a Markdown audit log listing every burned region by page and position. Original text, source image objects, metadata, attachments and forms are not copied.",
     watchFor:
       "This loses searchability/forms/signatures and is not certified legal redaction. Human selection and independent output review are essential. Crop, a black overlay or a watermark is not the same operation.",
     guide: {

@@ -1,6 +1,6 @@
 {
   "name": "pdforge",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "private": true,
   "description": "Free, private, browser-based PDF tools. Static hosting. No document uploads.",
   "license": "SEE LICENSE IN LICENSE",
@@ -21,7 +21,7 @@
     "audit:seo": "node scripts/lighthouse.mjs",
     "verify": "node scripts/verify.mjs",
     "fixtures": "tsx scripts/fixtures.mts",
-    "pdforge": "tsx cli/pdforge.mts",
+    "pdforge": "tsx cli/pdforge.ts",
     "test:independent": "tsx scripts/independent.mts",
     "test:cross-browser": "npm run fixtures && playwright test",
     "format": "prettier --write src scripts tests *.ts *.mjs package.json tsconfig.json .github docs README.md SECURITY.md CHANGELOG.md",

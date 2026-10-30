@@ -479,7 +479,8 @@ test("completed runs offer a verifiable audit receipt", async ({ page }) => {
   });
   const receipt = JSON.parse(raw);
   expect(receipt.app).toBe("pdforge");
-  expect(receipt.version).toBe("1.6.0");
+  const baseline = await (await page.request.get("testing-baseline.json")).json();
+  expect(receipt.version).toBe(baseline.testedRelease);
   expect(receipt.job.slug).toBe("compress");
   expect(receipt.inputs[0].name).toBe("three-pages.pdf");
   expect(receipt.inputs[0].sha256).toMatch(/^[0-9a-f]{64}$/);
@@ -509,4 +510,27 @@ test("bates prefix and padding stamp the output document", async ({ page }) => {
   const text = await pdfToText(bytes);
   expect(text).toContain("EXH-0001");
   expect(text).toContain("EXH-0003");
+});
+test("redaction downloads a region-by-region audit log", async ({ page }) => {
+  await choose(page, "redact", "metadata.pdf");
+  await page.getByRole("checkbox", { name: /I understand the output is image-based/ }).check();
+  await page
+    .getByText("Add a region using coordinates (keyboard accessible)", { exact: true })
+    .click();
+  await page.getByLabel("Left (%)", { exact: true }).fill("0");
+  await page.getByLabel("Top (%)", { exact: true }).fill("0");
+  await page.getByLabel("Width (%)", { exact: true }).fill("100");
+  await page.getByLabel("Height (%)", { exact: true }).fill("25");
+  await page.getByRole("button", { name: "Add region on page 1" }).click();
+  await page.getByRole("button", { name: "Apply permanent redaction", exact: true }).click();
+  await expect(page.locator(".result-panel")).toBeVisible({ timeout: 70000 });
+  await page.locator(".individual-files summary").click();
+  const links = page.locator(".individual-files a[download]");
+  await expect(links).toHaveCount(2);
+  const log = await links.nth(1).evaluate(async (node) => {
+    const a = node as HTMLAnchorElement;
+    return await (await fetch(a.href)).text();
+  });
+  expect(log).toContain("# Redaction log — metadata.pdf");
+  expect(log).toContain("Region 1 — page 1 of 1: left 0.0%, top 0.0%, width 100.0%, height 25.0%");
 });

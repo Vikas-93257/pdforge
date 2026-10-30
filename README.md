@@ -1,4 +1,4 @@
-# PDFORGE 1.6.0 — private-source PDF tools
+# PDFORGE 1.7.0 — private-source PDF tools
 
 **Your PDFs. Your device. Your rules.**
 

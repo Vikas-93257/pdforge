@@ -941,7 +941,7 @@ test("pipelines validate chains and thread file sets through steps", async () =>
 });
 test("local CLI converts, pipes and refuses honestly", async () => {
   const run = (args: string[]) =>
-    spawnSync(process.execPath, ["node_modules/tsx/dist/cli.mjs", "cli/pdforge.mts", ...args], {
+    spawnSync(process.execPath, ["node_modules/tsx/dist/cli.mjs", "cli/pdforge.ts", ...args], {
       encoding: "utf8",
     });
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "pdforge-cli-"));
