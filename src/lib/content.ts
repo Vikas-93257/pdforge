@@ -639,4 +639,38 @@ GUIDES.push(
       },
     ],
   },
+  {
+    slug: "audit-ready-processing",
+    title: "Prove what you processed, without an account",
+    description:
+      "Business-grade audit trails on a local-first toolkit: SHA-256 processing receipts, shareable settings preset packs and Bates-style numbering.",
+    eyebrow: "PRACTICAL PDF GUIDE",
+    updated: "2026-10-30",
+    intro:
+      "Regulated work needs proof, not promises. Every run can emit a receipt that binds inputs, outputs and settings together with hashes — generated on your device, with no account to subpoena.",
+    relatedTools: ["page-numbers", "redact", "metadata", "inspect"],
+    sections: [
+      {
+        heading: "Download a receipt for every run",
+        paragraphs: [
+          "After any single-tool run finishes, a receipt link appears under the result. The JSON records the app version, timestamp, tool, full settings, and every input and output with SHA-256 hashes. Passwords are recorded as withheld and signature images as byte counts, never content.",
+          "The receipt attests that these outputs came from these inputs with these settings; it does not certify what the documents say. Anyone can re-hash the files and compare. From the terminal, add --receipt to single-tool and pipeline runs alike.",
+        ],
+      },
+      {
+        heading: "Share settings as preset packs",
+        paragraphs: [
+          "Name the current settings on any tool page to save them as a preset in that browser. Export a JSON pack per tool and send it to colleagues; importing reports exactly which presets were added and which entries were skipped and why.",
+          "Packs carry settings only: files, passwords and signatures are never stored or exported. Unknown tools, unknown options and wrong value types are rejected per entry rather than silently dropped or applied.",
+        ],
+      },
+      {
+        heading: "Stamp Bates-style exhibit numbers",
+        paragraphs: [
+          "Page numbers accepts an optional prefix and zero-padding width, so EXH- with four digits stamps EXH-0001, EXH-0002 and onward — the exhibit labeling courts and discovery teams expect. Totals render the same way when enabled.",
+          "Numbering is sequential within one run starting from your chosen number. For consecutive numbering across separate source files, merge first and number the combined document.",
+        ],
+      },
+    ],
+  },
 );

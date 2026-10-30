@@ -202,6 +202,8 @@ export async function addPageNumbers(
     fontSize: number;
     withTotal: boolean;
     margin?: number;
+    prefix?: string;
+    padDigits?: number;
   },
 ) {
   finite(opts.start, 1, 1000000, "Starting number");
@@ -210,13 +212,22 @@ export async function addPageNumbers(
   finite(opts.fontSize, 6, 72, "Font size");
   if (!/^(top|bottom)-(left|center|right)$/.test(opts.position))
     throw new PdfError("Choose a valid number position.", "INPUT");
+  const prefix = opts.prefix ?? "";
+  if (prefix.length > 24 || /[\x00-\x1f\x7f]/.test(prefix))
+    throw new PdfError("Keep the numbering prefix to 24 printable characters.", "INPUT");
+  const padDigits = opts.padDigits ?? 0;
+  if (!Number.isInteger(padDigits) || padDigits < 0 || padDigits > 6)
+    throw new PdfError("Zero-padding must be 0–6 digits.", "INPUT");
   const d = await loadPdf(bytes),
-    font = await embedTextFont(d, "0123456789 /"),
+    font = await embedTextFont(d, `0123456789 /${prefix}`),
     pages = d.getPages();
+  const last = opts.start + pages.length - 1,
+    stamp = (n: number) => `${prefix}${String(n).padStart(padDigits, "0")}`;
   pages.forEach((p, i) =>
     inVisibleCoordinates(p, (w, h) => {
-      const n = opts.start + i,
-        label = opts.withTotal ? `${n} / ${opts.start + pages.length - 1}` : String(n),
+      const label = opts.withTotal
+          ? `${stamp(opts.start + i)} / ${stamp(last)}`
+          : stamp(opts.start + i),
         width = font.widthOfTextAtSize(label, opts.fontSize),
         margin = opts.margin ?? 28;
       const [v, horizontal] = opts.position.split("-");

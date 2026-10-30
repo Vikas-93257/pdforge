@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.6.0 — 2026-10-30 (business release)
+
+- Added SHA-256 audit receipts: every app run and every CLI run with
+  --receipt records version, timestamp, tool or pipeline, full settings
+  and input/output hashes. Passwords and signature bytes are withheld.
+- Added team preset packs: save named settings per tool in the browser,
+  export JSON packs to share, and import with per-entry added/skipped
+  reports. Files and signatures are never stored in presets.
+- Added Bates-style numbering to page numbers: optional prefix plus
+  zero-padding (EXH-0001…), with honest validation.
+- No accounts, uploads, paywall, e-sign cloud or repository-visibility
+  changes; original application source stays private/restricted.
+
 ## 1.5.0 — 2026-10-30 (intelligence release)
 
 - Added on-device document insight: every tool page reports scanned pages,

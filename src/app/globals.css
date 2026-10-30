@@ -3432,3 +3432,46 @@ summary::-webkit-details-marker {
   color: var(--warning, #92600a);
   margin: 0.7rem 0 0;
 }
+.preset-bar {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.9rem 1rem;
+  background: var(--surface);
+  margin-top: 0.9rem;
+}
+.preset-bar h2 {
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.6rem;
+}
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  align-items: flex-end;
+  margin-bottom: 0.6rem;
+}
+.preset-row .field {
+  flex: 1 1 12rem;
+  margin: 0;
+}
+.preset-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.result-receipt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  margin: 0.7rem 0 0;
+}
+.result-receipt a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}

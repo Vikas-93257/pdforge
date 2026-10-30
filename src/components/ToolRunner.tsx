@@ -37,6 +37,7 @@ import FormFiller from "./FormFiller";
 import ResultPanel, { type Completed } from "./ResultPanel";
 import { DriveOpenButton } from "./DriveButtons";
 import InsightPanel, { DuplicateNotice } from "./InsightPanel";
+import PresetBar from "./PresetBar";
 type Thumb = { page: number; dataUrl: string; rotation: number };
 function defaults(slug: string): ToolOptions {
   return {
@@ -262,6 +263,38 @@ export default function ToolRunner({ tool }: { tool: ToolDef }) {
         return { url, name: f.name, mime: f.mime, size: f.bytes.length };
       });
       setCompleted({ ...result, links });
+      void (async () => {
+        try {
+          const { buildReceipt } = await import("@/lib/receipts");
+          const built = await buildReceipt({
+            job: { kind: "tool", slug: tool.slug, name: tool.name },
+            settings: o,
+            inputs: files.map((f) => ({ name: f.name, bytes: f.bytes })),
+            outputs: result.files.map((f) => ({ name: f.name, bytes: f.bytes })),
+          });
+          if (!mounted.current) return;
+          const url = URL.createObjectURL(
+            new Blob([built.bytes.slice().buffer], { type: "application/json" }),
+          );
+          urls.current.push(url);
+          setCompleted((prev) =>
+            prev ? { ...prev, receipt: { url, name: built.name, size: built.bytes.length } } : prev,
+          );
+        } catch {
+          if (mounted.current)
+            setCompleted((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    notes: [
+                      ...prev.notes,
+                      "An audit receipt could not be prepared here (hashing unavailable).",
+                    ],
+                  }
+                : prev,
+            );
+        }
+      })();
       setProgress({ percent: 100, label: "Processing complete" });
       setTimeout(
         () =>
@@ -453,6 +486,7 @@ export default function ToolRunner({ tool }: { tool: ToolDef }) {
             <InsightPanel file={files[0]} currentSlug={tool.slug} />
           </>
         )}
+        <PresetBar slug={tool.slug} options={o} apply={set} />
         <ToolSettings
           key={session}
           slug={tool.slug}

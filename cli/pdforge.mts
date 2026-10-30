@@ -30,6 +30,7 @@ Options:
   --confirm        confirm image-rebuilding pipeline steps (sanitize/redact)
   --signature PNG  signature image for the sign tool
   --json           print a machine-readable result summary
+  --receipt        also write a SHA-256 audit receipt JSON
   --quiet          only print errors and the output list
   -h, --help       this text
 
@@ -48,6 +49,7 @@ type Args = {
   signature: string;
   json: boolean;
   quiet: boolean;
+  receipt: boolean;
 };
 
 function parseArgs(argv: string[]): Args {
@@ -62,6 +64,7 @@ function parseArgs(argv: string[]): Args {
     signature: "",
     json: false,
     quiet: false,
+    receipt: false,
   };
   const rest = [...argv];
   if (!rest.length || rest[0] === "-h" || rest[0] === "--help") {
@@ -89,6 +92,7 @@ function parseArgs(argv: string[]): Args {
       args.signature = rest.shift() ?? fail("--signature needs a file");
     else if (token === "--json") args.json = true;
     else if (token === "--quiet") args.quiet = true;
+    else if (token === "--receipt") args.receipt = true;
     else if (token === "-h" || token === "--help") {
       console.log(HELP);
       process.exit(0);
@@ -150,11 +154,14 @@ async function main() {
   }
   const isPipe = args.command === "pipe";
   let steps: { slug: string; options?: Partial<ToolOptions> }[] = [{ slug: args.command }];
+  let pipeId = "";
   if (isPipe) {
     const spec = args.inputs.shift() ?? fail("pipe needs a preset id or slug,slug,... chain");
     const preset = PIPELINES.find((p) => p.id === spec);
-    if (preset) steps = preset.steps.map((s) => ({ slug: s.slug, options: s.options }));
-    else {
+    if (preset) {
+      steps = preset.steps.map((s) => ({ slug: s.slug, options: s.options }));
+      pipeId = spec;
+    } else {
       steps = spec
         .split(",")
         .map((s) => s.trim())
@@ -163,6 +170,7 @@ async function main() {
       if (!steps.length) fail("pipe needs a preset id or slug,slug,... chain");
     }
   }
+  if (isPipe && !pipeId) pipeId = steps.map((s) => s.slug).join(",");
   const slugs = steps.map((s) => s.slug);
   const tools = slugs.map((slug) => getTool(slug) ?? fail(`Unknown tool: ${slug}`));
   validateChain(slugs);
@@ -233,6 +241,20 @@ async function main() {
     const target = path.join(args.out, file.name);
     await fs.writeFile(target, file.bytes);
     written.push(target);
+  }
+  if (args.receipt) {
+    const { buildReceipt } = await import("../src/lib/receipts");
+    const built = await buildReceipt({
+      job: isPipe
+        ? { kind: "pipeline", id: pipeId, steps: slugs }
+        : { kind: "tool", slug: slugs[0], name: tools[0].name },
+      settings: options,
+      inputs: files.map((f) => ({ name: f.name, bytes: f.bytes })),
+      outputs: result.files.map((f) => ({ name: f.name, bytes: f.bytes })),
+    });
+    const receiptTarget = path.join(args.out, built.name);
+    await fs.writeFile(receiptTarget, built.bytes);
+    written.push(receiptTarget);
   }
   if (args.json) {
     console.log(

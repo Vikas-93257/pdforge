@@ -20,6 +20,8 @@ export type ToolOptions = {
   start: number;
   fontSize: number;
   withTotal: boolean;
+  prefix: string;
+  padDigits: number;
   watermarkText: string;
   opacity: number;
   watermarkRotation: number;
@@ -65,6 +67,8 @@ export const DEFAULT_OPTIONS: ToolOptions = {
   start: 1,
   fontSize: 11,
   withTotal: true,
+  prefix: "",
+  padDigits: 0,
   watermarkText: "CONFIDENTIAL",
   opacity: 0.25,
   watermarkRotation: -35,
@@ -427,6 +431,8 @@ export async function executeTool(
           start: o.start,
           fontSize: o.fontSize,
           withTotal: o.withTotal,
+          prefix: o.prefix,
+          padDigits: o.padDigits,
         }),
       );
       break;

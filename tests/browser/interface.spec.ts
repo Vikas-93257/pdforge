@@ -468,3 +468,45 @@ test("duplicate files are flagged by content hash on multi-file tools", async ({
   await expect(page.locator(".file-row")).toHaveCount(2);
   await expect(page.locator(".duplicate-notice")).toContainText("Files 1 and 2 appear identical");
 });
+test("completed runs offer a verifiable audit receipt", async ({ page }) => {
+  await choose(page, "compress");
+  await page.getByRole("button", { name: "Compress PDF", exact: true }).click();
+  const link = page.locator(".result-receipt a[download]");
+  await expect(link).toBeVisible({ timeout: 70000 });
+  const raw = await link.evaluate(async (node) => {
+    const a = node as HTMLAnchorElement;
+    return await (await fetch(a.href)).text();
+  });
+  const receipt = JSON.parse(raw);
+  expect(receipt.app).toBe("pdforge");
+  expect(receipt.version).toBe("1.6.0");
+  expect(receipt.job.slug).toBe("compress");
+  expect(receipt.inputs[0].name).toBe("three-pages.pdf");
+  expect(receipt.inputs[0].sha256).toMatch(/^[0-9a-f]{64}$/);
+  expect(receipt.outputs[0].sha256).toMatch(/^[0-9a-f]{64}$/);
+  expect(receipt.settings.compression).toBe("lossless");
+});
+test("team presets save, apply and delete within the browser", async ({ page }) => {
+  await choose(page, "split");
+  await page.getByLabel(/^Page ranges/).fill("1-2");
+  await page.getByLabel("Save current settings as").fill("E2E Ranges");
+  await page.getByRole("button", { name: "Save preset", exact: true }).click();
+  await expect(page.locator(".preset-bar")).toContainText("Saved “E2E Ranges”");
+  await page.getByLabel(/^Page ranges/).fill("3");
+  await page.getByLabel("Saved presets for this tool").selectOption({ label: "E2E Ranges" });
+  await page.getByRole("button", { name: "Apply", exact: true }).click();
+  await expect(page.getByLabel(/^Page ranges/)).toHaveValue("1-2");
+  await page.getByRole("button", { name: "Delete", exact: true }).click();
+  await expect(page.locator(".preset-bar")).toContainText("Preset deleted");
+});
+test("bates prefix and padding stamp the output document", async ({ page }) => {
+  await choose(page, "page-numbers");
+  await page.getByLabel(/Numbering prefix/).fill("EXH-");
+  await page.getByLabel(/Zero-pad/).fill("4");
+  await page.getByRole("button", { name: "Add page numbers", exact: true }).click();
+  await expect(page.locator(".result-panel")).toBeVisible({ timeout: 70000 });
+  const [bytes] = await resultBytes(page);
+  const text = await pdfToText(bytes);
+  expect(text).toContain("EXH-0001");
+  expect(text).toContain("EXH-0003");
+});

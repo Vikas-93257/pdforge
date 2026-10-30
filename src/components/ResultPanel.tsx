@@ -7,6 +7,7 @@ import { fmtBytes } from "@/lib/site";
 import { DriveSaveButtons } from "./DriveButtons";
 export type Completed = ToolResult & {
   links: { url: string; name: string; mime: string; size: number }[];
+  receipt?: { url: string; name: string; size: number };
 };
 export default function ResultPanel({ result, slug }: { result: Completed; slug: string }) {
   const [zipUrl, setZipUrl] = useState(""),
@@ -154,6 +155,16 @@ export default function ResultPanel({ result, slug }: { result: Completed; slug:
         )}
       </div>
       <DriveSaveButtons files={result.files} />
+      {result.receipt && (
+        <p className="result-receipt">
+          <a href={result.receipt.url} download={result.receipt.name}>
+            <FileText size={15} aria-hidden="true" />
+            <span>Download audit receipt</span>
+            <small>{fmtBytes(result.receipt.size)}</small>
+          </a>
+          <span>Inputs, outputs and settings with SHA-256 hashes.</span>
+        </p>
+      )}
       {zipError && (
         <p className="form-error" role="alert">
           {zipError}

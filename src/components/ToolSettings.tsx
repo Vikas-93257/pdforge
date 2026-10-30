@@ -34,7 +34,7 @@ export default function ToolSettings({
   );
   const input = (
     label: string,
-    key: "ranges" | "watermarkText" | "title" | "author" | "subject" | "keywords",
+    key: "ranges" | "watermarkText" | "title" | "author" | "subject" | "keywords" | "prefix",
     hint?: string,
   ) => (
     <label className="field">
@@ -216,7 +216,9 @@ export default function ToolSettings({
             ])}
             {num("Start at number", "start", 1, 1000000)}
             {num("Font size (points)", "fontSize", 6, 72)}
+            {num("Zero-pad to digits (0–6)", "padDigits", 0, 6)}
           </div>
+          {input("Numbering prefix (optional, for Bates-style labels)", "prefix")}
           <label className="check-row">
             <input
               type="checkbox"
@@ -225,6 +227,9 @@ export default function ToolSettings({
             />
             <span>Show the final number, for example 1 / 12</span>
           </label>
+          <p className="settings-note">
+            Prefix EXH- with 4 padded digits stamps EXH-0001, EXH-0002 and so on.
+          </p>
         </>
       );
       break;
