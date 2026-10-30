@@ -495,9 +495,9 @@ test("DOCX preflight rejects declared ZIP bombs without decompressing", async ()
     }
   assert.throws(() => convert.inspectDocxZip(b), /safe 150 MB/);
 });
-test("catalog contains exactly 37 unique implemented tools", () => {
-  assert.equal(TOOLS.length, 37);
-  assert.equal(new Set(TOOLS.map((t) => t.slug)).size, 37);
+test("catalog contains exactly 38 unique implemented tools", () => {
+  assert.equal(TOOLS.length, 38);
+  assert.equal(new Set(TOOLS.map((t) => t.slug)).size, 38);
   for (const t of TOOLS) {
     assert.ok(t.steps.length >= 3);
     assert.ok(t.limitation.length > 20);
@@ -895,6 +895,8 @@ test("pipelines validate chains and thread file sets through steps", async () =>
   assert.equal(pipes.PIPELINES.length, 8);
   for (const preset of pipes.PIPELINES) pipes.validateChain(preset.steps.map((s) => s.slug));
   assert.throws(() => pipes.validateChain(["pdf-to-word", "compress"]), /cannot open/);
+  assert.throws(() => pipes.validateChain(["inspect", "compress"]), /not available in pipelines/);
+  assert.throws(() => pipes.validateChain(["sign", "compress"]), /needs a drawn or typed/);
   assert.throws(() => pipes.validateChain([]), /at least one/);
   assert.throws(
     () => pipes.validateChain(Array.from({ length: 9 }, () => "compress")),

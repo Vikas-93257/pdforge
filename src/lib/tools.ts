@@ -1165,6 +1165,38 @@ export const TOOLS: ToolDef[] = [
       },
     ],
   },
+  {
+    slug: "inspect",
+    name: "Inspect PDF",
+    description:
+      "Read a PDF's facts on your device: scanned pages, language, topics and next steps.",
+    category: "organize",
+    icon: "inspect",
+    accept: "pdf",
+    multiple: false,
+    cta: "Inspect PDF",
+    steps: [
+      "Choose your file. Nothing is uploaded.",
+      "Facts are measured on your device: no settings needed.",
+      "Process locally, review the result, and download your output.",
+    ],
+    limitation:
+      "On-device analysis only: word-frequency language and topic guesses, pattern counts and PDF metadata. It does not understand, verify or rewrite content. Scanned pages need OCR first for text-based facts.",
+    faqs: [
+      {
+        q: "Is Inspect PDF free to use?",
+        a: "Yes. There are no subscriptions, sign-ups, daily-use quotas or premium tools. Your browser's memory and the published file-safety limits still apply.",
+      },
+      {
+        q: "Are my files uploaded to a server?",
+        a: "The processing engine runs in your browser. Document contents, filenames and passwords are not sent to a processing server. Refreshing or clearing the workspace removes the app's references to your files.",
+      },
+      {
+        q: "What are the important limitations?",
+        a: "On-device analysis only: word-frequency language and topic guesses, pattern counts and PDF metadata. It does not understand, verify or rewrite content. Scanned pages need OCR first for text-based facts.",
+      },
+    ],
+  },
 ];
 export function getTool(slug: string) {
   return TOOLS.find((t) => t.slug === slug);

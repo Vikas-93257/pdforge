@@ -32,6 +32,7 @@ import {
   FormInput,
   ScrollText,
   Presentation,
+  FileSearch,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 export const TOOL_ICONS: Record<string, LucideIcon> = {
@@ -69,6 +70,7 @@ export const TOOL_ICONS: Record<string, LucideIcon> = {
   form: FormInput,
   summary: ScrollText,
   slides: Presentation,
+  inspect: FileSearch,
 };
 export function ToolIcon({
   name,

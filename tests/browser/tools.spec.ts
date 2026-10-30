@@ -275,6 +275,15 @@ for (const tool of TOOLS)
       const csv = new TextDecoder().decode(actual[0].bytes);
       expect(csv).toContain("Notebook");
       expect(csv).toContain("'=SUM(A1:A2)");
+    } else if (tool.slug === "inspect") {
+      expect(actual[0].name).toContain("-insight.md");
+      const report = new TextDecoder().decode(actual[0].bytes);
+      expect(report).toContain("# Document insight — three-pages.pdf");
+      expect(report).toContain("| Pages | 3 |");
+      expect(report).toContain("alpha-page-one.pdf");
+      expect(report).toContain("does not understand or verify");
+      await expect(page.locator(".insight-panel")).toContainText("3 pages");
+      await expect(page.locator(".insight-panel")).toContainText("Top topics:");
     }
     // Exercise a real browser download (and ZIP generation for multi-output tools).
     if (actual.length > 1) {

@@ -27,10 +27,10 @@ async function resultBytes(page: Page) {
 }
 test("home search, filters and actual client-side navigation", async ({ page }) => {
   await page.goto("");
-  await expect(page.locator(".tool-grid .tool-card")).toHaveCount(37);
+  await expect(page.locator(".tool-grid .tool-card")).toHaveCount(38);
   await page.getByRole("button", { name: "Secure", exact: true }).click();
   await expect(page.locator(".tool-grid .tool-card")).toHaveCount(4);
-  await page.getByRole("button", { name: /All tools 37/ }).click();
+  await page.getByRole("button", { name: /All tools 38/ }).click();
   await page.getByRole("searchbox", { name: "Search PDF tools" }).fill("compress");
   await expect(page.locator(".tool-grid .tool-card")).toHaveCount(1);
   await page.locator(".tool-grid .tool-card").click();
@@ -41,11 +41,11 @@ test("search has a keyboard-accessible no-results recovery", async ({ page }) =>
   await page.goto("");
   // Wait for client hydration before typing: filling pre-hydration sets the DOM
   // value without reaching React state, which flakes on slower engines.
-  await expect(page.locator(".tool-grid .tool-card")).toHaveCount(37);
+  await expect(page.locator(".tool-grid .tool-card")).toHaveCount(38);
   await page.getByRole("searchbox").fill("does-not-exist-731");
   await expect(page.getByRole("heading", { name: /No tools found/ })).toBeVisible();
   await page.getByRole("button", { name: "Show all tools" }).click();
-  await expect(page.locator(".tool-grid .tool-card")).toHaveCount(37);
+  await expect(page.locator(".tool-grid .tool-card")).toHaveCount(38);
 });
 for (const width of [320, 390, 768, 1440])
   test(`no horizontal overflow at ${width}px`, async ({ page }) => {
@@ -449,4 +449,22 @@ test("PWA manifest, icons and service worker are served", async ({ request }) =>
   const sw = await request.get("sw.js");
   expect(sw.status()).toBe(200);
   expect((await sw.text()).includes("addEventListener")).toBe(true);
+});
+test("document insight panel reports measured facts with next-step links", async ({ page }) => {
+  await choose(page, "compress");
+  const panel = page.locator(".insight-panel");
+  await expect(panel).toBeVisible({ timeout: 30000 });
+  await expect(panel).toContainText("3 pages");
+  await expect(panel).toContainText("Language guess:");
+  await expect(panel).toContainText("Top topics:");
+  const href = await panel.getByRole("link", { name: "Edit PDF metadata" }).getAttribute("href");
+  expect(href).toContain("tools/metadata/");
+});
+test("duplicate files are flagged by content hash on multi-file tools", async ({ page }) => {
+  await page.goto("tools/merge/");
+  await page
+    .locator('input[type="file"]')
+    .setInputFiles([fixture("three-pages.pdf"), fixture("three-pages.pdf")]);
+  await expect(page.locator(".file-row")).toHaveCount(2);
+  await expect(page.locator(".duplicate-notice")).toContainText("Files 1 and 2 appear identical");
 });

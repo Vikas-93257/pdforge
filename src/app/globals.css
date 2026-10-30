@@ -3399,3 +3399,36 @@ summary::-webkit-details-marker {
     flex-direction: column;
   }
 }
+.insight-panel {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.9rem 1rem;
+  background: var(--surface);
+  margin-top: 0.9rem;
+}
+.insight-panel h2 {
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+}
+.insight-panel ul {
+  margin: 0 0 0.5rem;
+  padding-left: 1.1rem;
+  font-size: 0.9rem;
+  display: grid;
+  gap: 0.2rem;
+}
+.insight-suggest {
+  font-size: 0.9rem;
+  margin: 0 0 0.4rem;
+}
+.duplicate-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--warning, #92600a);
+  margin: 0.7rem 0 0;
+}

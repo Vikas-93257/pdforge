@@ -36,6 +36,7 @@ import RedactionEditor from "./RedactionEditor";
 import FormFiller from "./FormFiller";
 import ResultPanel, { type Completed } from "./ResultPanel";
 import { DriveOpenButton } from "./DriveButtons";
+import InsightPanel, { DuplicateNotice } from "./InsightPanel";
 type Thumb = { page: number; dataUrl: string; rotation: number };
 function defaults(slug: string): ToolOptions {
   return {
@@ -445,6 +446,12 @@ export default function ToolRunner({ tool }: { tool: ToolDef }) {
               </div>
             ))}
           </div>
+        )}
+        {files.length > 0 && (
+          <>
+            {tool.multiple && files.length > 1 && <DuplicateNotice files={files} />}
+            <InsightPanel file={files[0]} currentSlug={tool.slug} />
+          </>
         )}
         <ToolSettings
           key={session}

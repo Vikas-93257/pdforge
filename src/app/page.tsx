@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 const faqs = [
   {
-    q: "Are all 37 tools really free?",
+    q: "Are all 38 tools really free?",
     a: "Yes. No subscriptions, premium tools, daily-use quotas or added PDFORGE watermarks. Device memory and safety limits still apply: 100 MB per file, 300 MB total and up to 50 files. Rendering is limited to 150 pages per run; OCR to 40.",
   },
   {

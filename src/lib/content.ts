@@ -22,7 +22,7 @@ export const PAGES: Article[] = [
       {
         heading: "Built around the everyday",
         paragraphs: [
-          "PDFORGE brings 37 focused document tools into a single browser workspace: combining pages, shrinking files, making simple conversions, adding a signature, and preparing documents to share. All tools are free to use; there is no premium tier or PDFORGE watermark added to your output.",
+          "PDFORGE brings 38 focused document tools into a single browser workspace: combining pages, shrinking files, making simple conversions, adding a signature, and preparing documents to share. All tools are free to use; there is no premium tier or PDFORGE watermark added to your output.",
           "It is an alternative for common PDF tasks, not a claim to reproduce every feature of a desktop editor or another online service. Office conversion is simplified, OCR makes mistakes, and some damaged or unusual documents cannot be processed. Every tool explains its limits.",
         ],
       },
@@ -601,6 +601,40 @@ GUIDES.push(
         paragraphs: [
           "Add --json for a machine-readable summary of written files, notes and pipeline stages, or --quiet to print only output paths. Exit 0 means success, 1 means usage error and 2 means processing failed.",
           "The same safety caps apply: 100 MB per file, 300 MB total and 50 files. The CLI makes no network calls at all — providers, fonts and models stay untouched.",
+        ],
+      },
+    ],
+  },
+  {
+    slug: "understanding-document-insight",
+    title: "Understand any PDF before you touch it",
+    description:
+      "Document insight measures a PDF on your device: scanned pages, language guess, key topics, contact patterns and metadata — then suggests honest next steps.",
+    eyebrow: "PRACTICAL PDF GUIDE",
+    updated: "2026-10-30",
+    intro:
+      "Every tool page reads your selected PDF and reports plain facts about it. There is no AI model and no cloud call — just counting, pattern matching and PDF metadata, all on your device.",
+    relatedTools: ["inspect", "ocr", "redact", "metadata"],
+    sections: [
+      {
+        heading: "What the panel measures",
+        paragraphs: [
+          "Insight counts pages, words and characters, then checks each page for selectable text. Pages with almost no text are flagged as looking scanned, which tells you OCR is needed before any text-based tool can work properly.",
+          "It also reads the stored title and author, counts fillable form fields, and counts email-shaped and phone-shaped patterns. Counts only: matches are never listed or sent anywhere.",
+        ],
+      },
+      {
+        heading: "How the guesses work",
+        paragraphs: [
+          "The language guess combines Unicode script detection with stopword voting across ten languages. Chinese, Japanese and Korean are recognized by script; distinctive scripts like Thai, Greek and Hebrew are reported directly. Short or jargon-heavy documents honestly report uncertain instead of guessing.",
+          "Top topics come from word frequency after removing stopwords, and repeated two-word phrases are listed when they recur. A suggested filename is built from the stored title or the first substantial line of text.",
+        ],
+      },
+      {
+        heading: "Follow the suggested next steps",
+        paragraphs: [
+          "Suggestions are fixed rules, not recommendations from a model: scanned pages point to OCR, form fields to form filling, contact patterns to redaction, a missing title to metadata, large files to compression and long documents to splitting. At most three are shown.",
+          "For a permanent record, run the Inspect tool: it writes the same findings as a Markdown report you can download, archive or attach to a ticket. Only the first 500,000 characters are analyzed, and the report says so when that cap applies.",
         ],
       },
     ],

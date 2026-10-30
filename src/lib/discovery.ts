@@ -684,6 +684,35 @@ export const DISCOVERY: Record<string, DiscoveryEntry> = {
       },
     ],
   },
+  inspect: {
+    title: "Inspect PDF — Free On-Device Document Analysis",
+    description:
+      "Inspect a PDF in your browser: scanned pages, language guess, key topics, contact patterns and metadata. Analysis runs on your device; nothing is uploaded.",
+    usefulFor:
+      "Understand an unfamiliar PDF before acting on it: confirm whether pages are scanned images or digital text, read the stored title and author, count form fields, and spot contact patterns worth redacting before sharing.",
+    produces:
+      "A Markdown insight report with measured facts, the language guess, top topics and suggested next tools, plus an on-screen summary.",
+    watchFor:
+      "Language and topic guesses come from word frequency, not understanding; short or jargon-heavy documents report uncertain. Contact counts are regex patterns only and can miss or overcount. Verify against the source.",
+    next: [
+      {
+        slug: "ocr",
+        label: "OCR scanned pages",
+        reason: "Add selectable text when the report flags scanned pages.",
+      },
+      {
+        slug: "redact",
+        label: "Redact sensitive details",
+        reason: "Cover contact details the pattern counts flagged before sharing.",
+      },
+      {
+        slug: "metadata",
+        label: "Set title and author",
+        reason: "Store a proper title when the report shows the metadata is empty.",
+      },
+    ],
+    guide: { slug: "understanding-document-insight", label: "Understanding document insight" },
+  },
 };
 export function discoveryFor(tool: ToolDef) {
   return DISCOVERY[tool.slug];

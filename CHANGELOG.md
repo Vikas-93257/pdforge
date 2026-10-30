@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.5.0 — 2026-10-30 (intelligence release)
+
+- Added on-device document insight: every tool page reports scanned pages,
+  word counts, a stopword-voted language guess, key topics, contact-pattern
+  counts, stored title/author and form fields, with fixed-rule next-step
+  suggestions. No models, no network calls.
+- Added the Inspect PDF tool: downloads the same findings as a Markdown
+  report. Available in the app and the CLI; excluded from pipelines because
+  it produces a report rather than a processable document.
+- Added duplicate-file notices on multi-file tools via content hashing.
+- No accounts, uploads, paywall, e-sign cloud, heavy-AI cloud or
+  repository-visibility changes; original application source stays
+  private/restricted.
+
 ## 1.4.0 — 2026-10-30 (ecosystem release)
 
 - Added multi-step pipelines: 8 ready-made workflows plus a custom chain

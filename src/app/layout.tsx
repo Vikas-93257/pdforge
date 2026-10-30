@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: "PDFORGE — Free PDF tools. No uploads. No sign-up.", template: "%s | PDFORGE" },
   description:
-    "37 free PDF tools that run on your device. Merge, split, compress, convert, sign and protect PDFs in your browser. No uploads, accounts or subscriptions.",
+    "38 free PDF tools that run on your device. Merge, split, compress, convert, sign and protect PDFs in your browser. No uploads, accounts or subscriptions.",
   applicationName: "PDFORGE",
   category: "productivity",
   robots: {
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "PDFORGE — Free, private PDF tools",
-    description: "37 tools. No uploads. No accounts. Built for your browser.",
+    description: "38 tools. No uploads. No accounts. Built for your browser.",
     images: [absolute("og.png")],
   },
   icons: {

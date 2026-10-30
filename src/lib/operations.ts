@@ -393,6 +393,22 @@ export async function executeTool(
         notes.push("Only the first 500,000 characters were considered for this summary.");
       break;
     }
+    case "inspect": {
+      const ai = await import("./ai/inspect");
+      const insight = await ai.inspectDocument(bytes, { signal });
+      previewText = ai.summarizeInsight(insight);
+      text(
+        ai.renderInsightReport(insight, files[0]?.name ?? "document.pdf"),
+        `${base}-insight.md`,
+        "text/markdown",
+      );
+      notes.push(
+        "On-device analysis only: word-frequency language and topic guesses, pattern counts and PDF metadata. It does not understand or verify content.",
+      );
+      if (insight.truncated)
+        notes.push("Only the first 500,000 characters were analyzed for this report.");
+      break;
+    }
     case "pdf-to-text":
       previewText = await (await import("./pdf/convert")).pdfToText(bytes, signal);
       text(previewText, `${base}.txt`);

@@ -64,6 +64,7 @@ export const PIPELINE_EXCLUDED: Record<string, string> = {
   compare: "needs exactly two input documents",
   "text-to-pdf": "needs typed text rather than a file",
   "fill-pdf-form": "needs a value for each form field",
+  inspect: "produces a text report, not a processable document",
 };
 
 export const PIPELINE_LIMITS = { maxSteps: 8, maxFiles: LIMITS.files } as const;
@@ -84,6 +85,11 @@ export function validateChain(slugs: string[]) {
   const tools = slugs.map((slug) => {
     const tool = getTool(slug);
     if (!tool) throw new PdfError(`Unknown pipeline step: ${slug}.`, "INPUT");
+    if (slug in PIPELINE_EXCLUDED)
+      throw new PdfError(
+        `${tool.name} is not available in pipelines: ${PIPELINE_EXCLUDED[slug]}.`,
+        "INPUT",
+      );
     return tool;
   });
   for (let i = 0; i + 1 < tools.length; i++) {

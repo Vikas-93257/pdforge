@@ -115,7 +115,7 @@ export default function ArticlePage({
             <h2>Ready for a little less busywork?</h2>
             <p>Choose a tool and keep your documents on your device.</p>
             <Link href="/#tools" className="button button-green" prefetch={false}>
-              Explore all 37 tools <ArrowRight size={17} aria-hidden="true" />
+              Explore all 38 tools <ArrowRight size={17} aria-hidden="true" />
             </Link>
           </div>
         </div>
